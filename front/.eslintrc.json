@@ -20,6 +20,7 @@
         "plugin:import/recommended",
         "plugin:import/typescript",
         "plugin:@typescript-eslint/recommended",
+        "plugin:@angular-eslint/recommended",
         "plugin:@angular-eslint/ng-cli-compat",
         "plugin:@angular-eslint/ng-cli-compat--formatting-add-on",
         "plugin:@angular-eslint/template/process-inline-templates"
@@ -118,16 +119,16 @@
             "format": ["UPPER_CASE", "camelCase"]
           },
           {
-            "selector": "typeLike",
+            "selector": ["variableLike", "memberLike", "property", "method"],
+            "format": ["camelCase"]
+          },
+          {
+            "selector": ["typeLike", "enumMember"],
             "format": ["PascalCase"]
           },
           {
             "selector": "property",
             "modifiers": ["static"],
-            "format": ["PascalCase"]
-          },
-          {
-            "selector": "enumMember",
             "format": ["PascalCase"]
           }
         ],
