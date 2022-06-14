@@ -5,7 +5,6 @@ import { Axis, Point } from './geometry';
 import { PieceShape } from './piece-shape';
 import { StraightEdge } from './straight-edge';
 import { TabbedEdge } from './tabbed-edge';
-
 import type { ISpritesheetData } from 'pixi.js';
 
 // Represent the top-left (included) and the bottom-right (exclued) coordinates of a quadrant.

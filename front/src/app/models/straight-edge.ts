@@ -1,7 +1,6 @@
 import { Canvas } from './canvas';
 import { Edge } from './edge';
 import { Axis, Geometry } from './geometry';
-
 import type { StraightPath } from './geometry';
 
 export class StraightEdge implements Edge {

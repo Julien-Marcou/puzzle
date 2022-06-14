@@ -1,5 +1,4 @@
 import { Edge } from './edge';
-
 import type { BezierPath, StraightPath } from './geometry';
 
 type Repetition = 'repeat' | 'repeat-x' | 'repeat-y' | 'no-repeat';

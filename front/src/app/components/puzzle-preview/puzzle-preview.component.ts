@@ -4,7 +4,6 @@ import { AXIS_TO_DIMENSION, VALID_AXES } from '../../models/geometry';
 import { PuzzleGame } from '../../models/puzzle-game';
 import { PuzzlePreview } from '../../models/puzzle-preview';
 import { PuzzleSpritesheet } from '../../models/puzzle-spritesheet';
-
 import type { Point } from '../../models/geometry';
 
 @Component({

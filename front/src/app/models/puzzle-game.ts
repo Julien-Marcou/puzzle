@@ -3,7 +3,6 @@ import { FpsGraph } from './fps-graph';
 import { Point } from './geometry';
 import { PieceSprite } from './piece-sprite';
 import { PuzzleSpritesheet } from './puzzle-spritesheet';
-
 import type { Renderer, InteractionManager, AccessibilityManager, TilingSpriteRenderer, Extract } from 'pixi.js';
 
 type PointerId = number;

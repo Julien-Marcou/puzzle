@@ -14,7 +14,7 @@ export class AbortError extends Error {
 
 export type AbortableExecutor<T> = (
   resolve: (value: T) => void,
-  reject: (reason?: any) => void,
+  reject: (reason?: unknown) => void,
   abortSignal: AbortSignal,
 ) => void;
 
@@ -22,6 +22,26 @@ export class AbortablePromise<T> extends Promise<T> {
 
   private readonly abortController: AbortController;
   private state = PromiseState.Running;
+
+  constructor(executor: AbortableExecutor<T>) {
+    const abortController = new AbortController();
+    super((innerResolve, innerReject) => {
+      const resolve = (value: T): void => {
+        this.state = PromiseState.Resolved;
+        innerResolve(value);
+      };
+      const reject = (reason?: unknown): void => {
+        this.state = PromiseState.Rejected;
+        innerReject(reason);
+      };
+      abortController.signal.addEventListener('abort', () => {
+        this.state = PromiseState.Aborted;
+        innerReject(new AbortError('Promise has been aborted'));
+      });
+      executor(resolve, reject, abortController.signal);
+    });
+    this.abortController = abortController;
+  }
 
   public get resolved(): boolean {
     return this.state === PromiseState.Resolved;
@@ -33,26 +53,6 @@ export class AbortablePromise<T> extends Promise<T> {
 
   public get aborted(): boolean {
     return this.state === PromiseState.Aborted;
-  }
-
-  constructor(executor: AbortableExecutor<T>) {
-    const abortController = new AbortController();
-    super((innerResolve, innerReject) => {
-      const resolve = (value: T) => {
-        this.state = PromiseState.Resolved;
-        innerResolve(value);
-      };
-      const reject = (reason?: any) => {
-        this.state = PromiseState.Rejected;
-        innerReject(reason);
-      };
-      abortController.signal.addEventListener('abort', () => {
-        this.state = PromiseState.Aborted;
-        innerReject(new AbortError('Promise has been aborted'));
-      });
-      executor(resolve, reject, abortController.signal);
-    });
-    this.abortController = abortController;
   }
 
   public async abort(): Promise<void> {

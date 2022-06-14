@@ -2,7 +2,6 @@ import { Canvas } from './canvas';
 import { Edge } from './edge';
 import { Axis, Geometry } from './geometry';
 import { PieceShape } from './piece-shape';
-
 import type { BezierPath } from './geometry';
 
 export class TabbedEdge implements Edge {

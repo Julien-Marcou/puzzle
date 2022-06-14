@@ -20,4 +20,4 @@ import { PuzzlePreviewComponent } from './components/puzzle-preview/puzzle-previ
   providers: [],
   bootstrap: [AppComponent],
 })
-export class AppModule {}
+export class AppModule { }
