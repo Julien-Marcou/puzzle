@@ -1,0 +1,31 @@
+@import "styles/reset";
+
+button {
+  padding: 0.7rem 1rem;
+  border-radius: 5px;
+  background-color: #eee;
+  text-shadow: 0 0 2px #fff;
+
+  &:hover, &:focus-visible {
+    background-color: #ccc;
+  }
+}
+
+.pixijs-canvas {
+  display: block;
+  user-select: none;
+  touch-action: none;
+  cursor: default;
+
+  &[data-can-interact="true"] {
+    cursor: grab;
+  }
+
+  &[data-viewport-state="interaction"] {
+    cursor: grabbing;
+  }
+
+  &[data-viewport-state="manipulation"] {
+    cursor: move;
+  }
+}

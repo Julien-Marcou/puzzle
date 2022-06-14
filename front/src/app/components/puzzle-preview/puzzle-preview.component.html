@@ -1,0 +1,93 @@
+<div class="puzzle-form" [hidden]="gameStarted">
+
+  <div class="puzzle-parameters">
+
+    <div class="puzzle-image-parameter">
+      <div class="label">
+        Choix du puzzle :
+      </div>
+      <div class="thumbnails">
+        <button
+          class="thumbnail"
+          type="button"
+          *ngFor="let puzzleImage of puzzleImages"
+          [class.active]="!loadingPuzzleImage && selectedPuzzleImage === puzzleImage"
+          [class.loading]="loadingPuzzleImage === puzzleImage"
+          [disabled]="!loadingPuzzleImage && selectedPuzzleImage === puzzleImage || loadingPuzzleImage === puzzleImage"
+          (click)="setPuzzleImage(puzzleImage)">
+          <img
+            class="thumbnail-image"
+            src="{{ puzzleThumbnailFolder + '/' + puzzleImage }}"
+            alt="Puzzle: {{ puzzleImage }}">
+          <div class="thumbnail-marker">
+            <app-checkmark-spinner [complete]="selectedPuzzleImage === puzzleImage"></app-checkmark-spinner>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <div class="puzzle-size-parameter">
+      <div class="label">
+        Taille du puzzle :
+      </div>
+      <input
+        autocomplete="off"
+        class="puzzle-size-input"
+        [(ngModel)]="selectedPieceSizeIndex"
+        (ngModelChange)="updatePieceSize()"
+        [disabled]="loadingPuzzleImage || !puzzleImage"
+        type="range"
+        step="1"
+        min="0"
+        [max]="validPieceSizes.length - 1">
+      <div class="puzzle-size-output">
+        <span class="min-value">
+          Petit
+        </span>
+        <span class="current-value">
+          {{ horizontalPieceCount }}x{{ verticalPieceCount }}
+          ({{ horizontalPieceCount * verticalPieceCount }} pièces)
+        </span>
+        <span class="max-value">
+          Grand
+        </span>
+      </div>
+    </div>
+
+    <div class="puzzle-preview">
+      <div class="label">
+        Preview du puzzle :
+      </div>
+      <div class="puzzle-preview-output" [class.loading]="loadingPuzzleImage || !puzzleImage">
+        <canvas class="puzzle-preview-canvas" #puzzlePreview></canvas>
+        <div class="loader">
+          Chargement...
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer-actions">
+    <button
+      type="button"
+      class="start-puzzle-button"
+      (click)="startPuzzle()"
+      [disabled]="loadingPuzzleImage || !puzzleImage">
+      Démarrer le puzzle
+    </button>
+  </div>
+
+  <button class="loading-image-error" [class.display]="imageLoadingError" (click)="clearImageLoadingError()">
+    Une erreur est survenue pendant le chargement du puzzle.
+  </button>
+
+</div>
+
+<div class="puzzle-game-wrapper" #puzzleGameWrapper [hidden]="!gameStarted">
+  <button type="button" class="close-puzzle-button" (click)="exitPuzzle()">
+    Changer de puzzle
+  </button>
+</div>
+
+

@@ -1,0 +1,116 @@
+$spinner-rotation-duration: 2s;
+$spinner-pulse-duration: 1.5s;
+$checkmark-drawing-duration: 0.4s;
+$stroke-width: 2px;
+$min-arc-opening: 25; // In degrees
+$max-arc-opening: 250; // In degrees
+$one-degree-arc-length: 0.17454; // In pixels, for a radius of 10
+$angle-to-checkmark: -172.5; // In degrees
+$chekmark-stroke-length: 50; // In pixels
+$checkmark-offset: 2; // In pixels (space between the circle and the beginning of the checkmark)
+$transparent-stroke-length: 200; // In pixels (any value longer than the svg path of the chekmark or the entire circle)
+
+:host {
+  display: block;
+  width: 64px;
+  height: 64px;
+}
+
+@keyframes spinnerRotation {
+  0% {
+    transform: rotate(#{$angle-to-checkmark + ($min-arc-opening * 0.5)}deg);
+  }
+  100% {
+    transform: rotate(#{$angle-to-checkmark - 360 + ($min-arc-opening * 0.5)}deg);
+  }
+}
+
+@keyframes spinnerPulse {
+  0% {
+    stroke-dasharray: #{$one-degree-arc-length * $min-arc-opening}, #{$transparent-stroke-length};
+    stroke-dashoffset: #{-$one-degree-arc-length * (360 - $min-arc-opening)};
+    transform: rotate(#{$min-arc-opening * 0.5}deg);
+  }
+  50% {
+    stroke-dasharray: #{$one-degree-arc-length * $max-arc-opening}, #{$transparent-stroke-length};
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dasharray: #{$one-degree-arc-length * $min-arc-opening}, #{$transparent-stroke-length};
+    stroke-dashoffset: 0;
+    transform: rotate(#{-$min-arc-opening * 0.5}deg);
+  }
+}
+
+@keyframes spinnerStop {
+  0% {
+    stroke-dasharray: var(--stroke-dasharray);
+    transform: var(--transform);
+  }
+  100% {
+    stroke-dasharray: 0, #{$transparent-stroke-length};
+    transform: var(--target-transform);
+  }
+}
+
+@keyframes spinnerFade {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes checkmarkDrawing {
+  0% {
+    stroke-dasharray: 0, #{$transparent-stroke-length};
+    stroke-dashoffset: 0;
+  }
+  20% {
+    stroke-dasharray: 0, #{$transparent-stroke-length};
+    stroke-dashoffset: #{-$checkmark-offset};
+  }
+  100% {
+    stroke-dashoffset: #{-$checkmark-offset};
+    stroke-dasharray: #{$chekmark-stroke-length}, #{$transparent-stroke-length};
+  }
+}
+
+.loading-checkmark {
+  display: block;
+  width: 100%;
+  height: 100%;
+
+  .arc, .checkmark {
+    stroke-width: #{$stroke-width};
+    stroke: #000;
+  }
+  .spinner {
+    --target-angle: #{$angle-to-checkmark};
+    transform-origin: center;
+    animation: spinnerRotation #{$spinner-rotation-duration} linear infinite forwards;
+  }
+  .arc {
+    transform-origin: center;
+    animation: spinnerPulse #{$spinner-pulse-duration} ease-in-out infinite forwards;
+  }
+  .checkmark {
+    stroke-dashoffset: 1;
+    stroke-dasharray: 0, #{$transparent-stroke-length};
+  }
+
+  &.complete {
+    .spinner {
+      animation: none;
+      transform: var(--transform);
+    }
+    .arc {
+      animation: spinnerStop var(--stop-duration) ease-out forwards, spinnerFade 0.1s linear forwards var(--stop-duration);
+      stroke-dashoffset: var(--stroke-dashoffset);
+    }
+    .checkmark {
+      animation: checkmarkDrawing #{$checkmark-drawing-duration} cubic-bezier(0, 0, 0.2, 0.1) forwards var(--stop-duration);
+    }
+  }
+}
