@@ -15,6 +15,7 @@ button {
   display: block;
   user-select: none;
   touch-action: none;
+  contain: layout size paint style;
   cursor: default;
 
   &[data-can-interact="true"] {

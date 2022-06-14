@@ -42,8 +42,9 @@
  *
  */
  /* eslint-disable */
- (window as any).__Zone_disable_requestAnimationFrame = true;
- (window as any).__zone_symbol__UNPATCHED_EVENTS = ['scroll', 'wheel', 'mousemove', 'touchmove', 'pointermove'];
+(window as any).__Zone_disable_requestAnimationFrame = true;
+(window as any).__Zone_disable_canvas = true;
+(window as any).__zone_symbol__UNPATCHED_EVENTS = ['scroll', 'wheel', 'mousemove', 'touchmove', 'pointermove'];
  /* eslint-enable */
 
 /***************************************************************************************************

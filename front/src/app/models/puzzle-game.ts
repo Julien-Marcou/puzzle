@@ -59,10 +59,12 @@ export class PuzzleGame {
   private readonly viewportContainer: Container;
   private readonly pieceContainer: Container;
   private readonly resizeObserver: ResizeObserver;
+  private readonly canvasOrigin: Point;
 
   private readonly capturedPointers: Map<PointerId, Pointer> = new Map();
   private viewportState = ViewportState.Idle;
   private viewportManipulation?: ManipulationType;
+  private canInteract = false;
   private initialPinch?: PinchToZoomInitialState;
   private initalViewportDrag?: ViewportDragInitialState;
   private hoveredPiece?: PieceSprite;
@@ -92,6 +94,10 @@ export class PuzzleGame {
     this.canvas = document.createElement('canvas');
     this.canvas.classList.add('pixijs-canvas');
     this.wrapper.appendChild(this.canvas);
+    this.canvasOrigin = {
+      x: this.canvas.offsetLeft,
+      y: this.canvas.offsetTop,
+    };
 
     this.pieceContainer = new Container();
     this.pieceContainer.x = this.puzzleOrigin.x;
@@ -304,8 +310,8 @@ export class PuzzleGame {
 
   private getCanvasPosition(event: MouseEvent): Point {
     return {
-      x: event.pageX - this.canvas.offsetLeft,
-      y: event.pageY - this.canvas.offsetTop,
+      x: event.pageX - this.canvasOrigin.x,
+      y: event.pageY - this.canvasOrigin.y,
     };
   }
 
@@ -317,6 +323,7 @@ export class PuzzleGame {
 
   private addGameEventListeners():  void {
     const handlePieceHovering = (event: PointerEvent): void => {
+      const previousCanInteract = this.canInteract;
       const canvasPosition = this.getCanvasPosition(event);
       const mousePositionInPieceContainer = this.getPieceContainerPosition(canvasPosition);
       const piece = this.getPieceAt(mousePositionInPieceContainer);
@@ -330,7 +337,10 @@ export class PuzzleGame {
         this.hoveredPiece = piece;
         this.hoveredPiece.addOutline();
       }
-      this.canvas.setAttribute('data-can-interact', this.hoveredPiece ? 'true' : 'false');
+      this.canInteract = !!this.hoveredPiece;
+      if (previousCanInteract !== this.canInteract) {
+        this.canvas.setAttribute('data-can-interact', this.canInteract ? 'true' : 'false');
+      }
     };
 
     const releasePieceHover = (): void => {
@@ -548,6 +558,8 @@ export class PuzzleGame {
     };
 
     const updateViewportState = (): void => {
+      const previousState = this.viewportState;
+      const previousManipulation = this.viewportManipulation;
       if (this.capturedPointers.size === 0) {
         this.viewportState = ViewportState.Idle;
         this.viewportManipulation = undefined;
@@ -566,8 +578,12 @@ export class PuzzleGame {
         this.viewportState = ViewportState.Manipulation;
         this.viewportManipulation = ManipulationType.Pinch;
       }
-      this.canvas.setAttribute('data-viewport-state', this.viewportState);
-      this.canvas.setAttribute('data-viewport-manipulation', this.viewportManipulation ?? '');
+      if (previousState !== this.viewportState) {
+        this.canvas.setAttribute('data-viewport-state', this.viewportState);
+      }
+      if (previousManipulation !== this.viewportManipulation) {
+        this.canvas.setAttribute('data-viewport-manipulation', this.viewportManipulation ?? '');
+      }
     };
 
     this.canvas.addEventListener('pointerdown', (event) => {
