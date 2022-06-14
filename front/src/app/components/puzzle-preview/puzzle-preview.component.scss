@@ -95,6 +95,7 @@
         border-radius: 3px;
         object-fit: cover;
         user-select: none;
+        -webkit-user-select: none;
       }
 
       .thumbnail-marker {
@@ -182,6 +183,7 @@
       display: block;
       width: 100%;
       user-select: none;
+      -webkit-user-select: none;
       margin: 0 auto;
     }
 
