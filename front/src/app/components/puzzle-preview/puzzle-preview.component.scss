@@ -204,12 +204,19 @@
   height: 100vh;
   overflow: hidden;
 
-  .close-puzzle-button {
+  .close-puzzle-button, .debug-webgl-button {
     z-index: 1;
     position: absolute;
-    top: 145px;
     left: 10px;
     width: 200px;
     text-align: center;
+  }
+
+  .close-puzzle-button {
+    top: 145px;
+  }
+
+  .debug-webgl-button {
+    top: calc(145px + 10px + 2.55rem);
   }
 }

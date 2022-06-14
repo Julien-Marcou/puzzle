@@ -147,31 +147,7 @@ export class PuzzleGame {
       this.start();
     }
     catch (error) {
-      this.wrapper.innerHTML =`<p>${error}<p>`;
-      const renderer =(this.application.renderer as Renderer);
-      const webglVersion = renderer.context.webGLVersion;
-      const maxTextureSize = renderer.gl.getParameter(renderer.gl.MAX_TEXTURE_SIZE);
-      const maxViewportDims = renderer.gl.getParameter(renderer.gl.MAX_VIEWPORT_DIMS);
-      const currentViewport = renderer.gl.getParameter(renderer.gl.VIEWPORT);
-      const maxRenderBufferSize = renderer.gl.getParameter(renderer.gl.MAX_RENDERBUFFER_SIZE);
-      const maxTextureImageUnits = renderer.gl.getParameter(renderer.gl.MAX_TEXTURE_IMAGE_UNITS);
-      const maxCombinedTextureImageUnits = renderer.gl.getParameter(renderer.gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS);
-      const currentRenderBufferWidth = renderer.gl.getRenderbufferParameter(renderer.gl.RENDERBUFFER, renderer.gl.RENDERBUFFER_WIDTH);
-      const currentRenderBufferHeight = renderer.gl.getRenderbufferParameter(renderer.gl.RENDERBUFFER, renderer.gl.RENDERBUFFER_HEIGHT);
-      this.wrapper.innerHTML =`<p style="overflow-y: auto; overflow-x: hidden; display: block; width: 100%; height: 100%; padding: 5px;">
-        ${error}<br>
-        <br>
-        WebGL ${webglVersion}<br>
-        Pixel Density: ${window.devicePixelRatio}<br>
-        Max texture size: ${maxTextureSize}<br>
-        Max texture image units: ${maxTextureImageUnits}<br>
-        Max combined texture image units: ${maxCombinedTextureImageUnits}<br>
-        Max render buffer size: ${maxRenderBufferSize}<br>
-        Max viewport size: ${maxViewportDims}<br>
-        Current render buffer width: ${currentRenderBufferWidth}<br>
-        Current render buffer height: ${currentRenderBufferHeight}<br>
-        Current viewport size: ${currentViewport}<br>
-      </p>`;
+      this.debug(error);
     }
   }
 
@@ -202,6 +178,39 @@ export class PuzzleGame {
     this.application.stop();
     this.spritesheet.destroy();
     this.application.destroy(true, {children: true, texture: true, baseTexture: true});
+  }
+
+  public debug(message?: string | unknown): void {
+    this.wrapper.innerHTML =`<p>${message}<p>`;
+    const renderer =(this.application.renderer as Renderer);
+    const webglVersion = renderer.context.webGLVersion;
+    const maxTextureSize = renderer.gl.getParameter(renderer.gl.MAX_TEXTURE_SIZE);
+    const maxViewportDims = renderer.gl.getParameter(renderer.gl.MAX_VIEWPORT_DIMS);
+    const currentViewport = renderer.gl.getParameter(renderer.gl.VIEWPORT);
+    const maxRenderBufferSize = renderer.gl.getParameter(renderer.gl.MAX_RENDERBUFFER_SIZE);
+    const maxTextureImageUnits = renderer.gl.getParameter(renderer.gl.MAX_TEXTURE_IMAGE_UNITS);
+    const maxCombinedTextureImageUnits = renderer.gl.getParameter(renderer.gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS);
+    const currentRenderBufferWidth = renderer.gl.getRenderbufferParameter(renderer.gl.RENDERBUFFER, renderer.gl.RENDERBUFFER_WIDTH);
+    const currentRenderBufferHeight = renderer.gl.getRenderbufferParameter(renderer.gl.RENDERBUFFER, renderer.gl.RENDERBUFFER_HEIGHT);
+    this.wrapper.innerHTML =`<p style="overflow-y: auto; overflow-x: hidden; display: block; width: 100%; height: 100%; padding: 5px;">
+      ${message ? `${message}<br><br>` : ''}
+      WebGL ${webglVersion}<br>
+      Pixel Density: ${window.devicePixelRatio}<br>
+      Max texture size: ${maxTextureSize}<br>
+      Max texture image units: ${maxTextureImageUnits}<br>
+      Max combined texture image units: ${maxCombinedTextureImageUnits}<br>
+      Max render buffer size: ${maxRenderBufferSize}<br>
+      Max viewport size: ${maxViewportDims}<br>
+      Current render buffer width: ${currentRenderBufferWidth}<br>
+      Current render buffer height: ${currentRenderBufferHeight}<br>
+      Current viewport size: ${currentViewport}<br>
+    </p>`;
+    try {
+      this.stop();
+    }
+    catch {
+      // Silently fail
+    }
   }
 
   private drawBorder(scale: number): void {

@@ -151,6 +151,12 @@ export class PuzzlePreviewComponent implements OnInit {
     this.gameStarted = false;
   }
 
+  public debugWebGL(): void {
+    if (this.puzzleGame) {
+      this.puzzleGame.debug();
+    }
+  }
+
   private async updatePuzzleImage(puzzleImage: ImageBitmap): Promise<void> {
     if (this.puzzleImage) {
       this.puzzleImage.close();
