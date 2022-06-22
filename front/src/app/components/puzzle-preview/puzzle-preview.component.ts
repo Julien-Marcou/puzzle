@@ -77,7 +77,7 @@ export class PuzzlePreviewComponent implements OnInit {
   public gameStarted = false;
   public imageError?: ImageError;
 
-  protected readonly maxFileSize = 15 * 1024 * 1024; // In Bytes
+  protected readonly maxFileSize = 15; // In Megabytes
   protected readonly minPuzzleImageWidth = 450; // In pixels
   protected readonly minPuzzleImageHeight = 450; // In pixels
   protected readonly maxPuzzleImageWidth = 4096; // In pixels
@@ -138,7 +138,7 @@ export class PuzzlePreviewComponent implements OnInit {
     }
     this.puzzleFileInput.nativeElement.value = '';
 
-    if (file.size > this.maxFileSize) {
+    if (file.size > (this.maxFileSize * 1024 * 1024)) {
       this.displayImageError('too-heavy');
       return;
     }
