@@ -1,4 +1,5 @@
 import { Application, Container, Graphics, Text, LINE_JOIN } from 'pixi.js';
+import { environment } from '../../environments/environment';
 import { FpsGraph } from './fps-graph';
 import { Point } from './geometry';
 import { PieceSprite } from './piece-sprite';
@@ -132,10 +133,12 @@ export class PuzzleGame {
     this.application.stage.interactiveChildren = false;
     this.application.stage.addChild(this.viewportContainer);
 
-    const fpsGraph = new FpsGraph(this.application.ticker);
-    fpsGraph.x = 10;
-    fpsGraph.y = 10;
-    this.application.stage.addChild(fpsGraph);
+    if (!environment.production) {
+      const fpsGraph = new FpsGraph(this.application.ticker);
+      fpsGraph.x = 10;
+      fpsGraph.y = 10;
+      this.application.stage.addChild(fpsGraph);
+    }
 
     this.resizeObserver = new ResizeObserver(() => {
       this.resize();
