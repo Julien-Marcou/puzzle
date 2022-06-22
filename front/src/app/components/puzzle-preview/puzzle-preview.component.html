@@ -10,21 +10,36 @@
         <button
           class="thumbnail"
           type="button"
-          *ngFor="let puzzleImage of puzzleImages"
-          [class.active]="!loadingPuzzleImage && selectedPuzzleImage === puzzleImage"
-          [class.loading]="loadingPuzzleImage === puzzleImage"
-          [disabled]="!loadingPuzzleImage && selectedPuzzleImage === puzzleImage || loadingPuzzleImage === puzzleImage"
-          (click)="setPuzzleImage(puzzleImage)">
+          *ngFor="let puzzle of puzzles"
+          [class.active]="!loadingPuzzle && selectedPuzzle === puzzle"
+          [class.loading]="loadingPuzzle === puzzle"
+          [disabled]="!loadingPuzzle && selectedPuzzle === puzzle || loadingPuzzle === puzzle"
+          (click)="setPuzzle(puzzle)">
           <img
             class="thumbnail-image"
-            src="{{ puzzleThumbnailFolder + '/' + puzzleImage }}"
-            alt="Puzzle: {{ puzzleImage }}">
+            src="{{ puzzleThumbnailFolder + '/' + puzzle }}"
+            alt="Puzzle: {{ puzzle }}">
           <div class="thumbnail-marker">
-            <app-checkmark-spinner [complete]="selectedPuzzleImage === puzzleImage"></app-checkmark-spinner>
+            <app-checkmark-spinner [complete]="selectedPuzzle === puzzle"></app-checkmark-spinner>
           </div>
         </button>
       </div>
     </div>
+
+    <label class="select-file-button" for="puzzle-file-input">
+      <input class="file-input" id="puzzle-file-input" type="file" (input)="setCustomPuzzle($event)" multiple="false" #puzzleFileInput>
+      <div class="file-button">
+        <div class="icon">
+          <span class="material-icons" aria-hidden="true">file_upload</span>
+        </div>
+        <div class="text">
+          Choisir une image
+        </div>
+        <div class="condition">
+          (max. 4096×4096)
+        </div>
+      </div>
+    </label>
 
     <div class="puzzle-size-parameter">
       <div class="label">
@@ -35,7 +50,7 @@
         class="puzzle-size-input"
         [(ngModel)]="selectedPieceSizeIndex"
         (ngModelChange)="updatePieceSize()"
-        [disabled]="loadingPuzzleImage || !puzzleImage"
+        [disabled]="loadingPuzzle || !puzzleImage"
         type="range"
         step="1"
         min="0"
@@ -58,7 +73,7 @@
       <div class="label">
         Preview du puzzle :
       </div>
-      <div class="puzzle-preview-output" [class.loading]="loadingPuzzleImage || !puzzleImage">
+      <div class="puzzle-preview-output" [class.loading]="loadingPuzzle || !puzzleImage">
         <canvas class="puzzle-preview-canvas" #puzzlePreview></canvas>
         <div class="loader">
           Chargement...
@@ -73,13 +88,33 @@
       type="button"
       class="start-puzzle-button"
       (click)="startPuzzle()"
-      [disabled]="loadingPuzzleImage || !puzzleImage">
+      [disabled]="loadingPuzzle || !puzzleImage">
       Démarrer le puzzle
     </button>
   </div>
 
-  <button type="button" class="loading-image-error" [class.display]="imageLoadingError" (click)="clearImageLoadingError()">
+  <button type="button" class="image-error" [class.display]="imageError === 'loading'" (click)="clearImageError()">
     Une erreur est survenue pendant le chargement du puzzle.
+  </button>
+
+  <button type="button" class="image-error" [class.display]="imageError === 'too-heavy'" (click)="clearImageError()">
+    L'image choisie est trop lourde.
+  </button>
+
+  <button type="button" class="image-error" [class.display]="imageError === 'too-small'" (click)="clearImageError()">
+    L'image choisie est trop petite.
+  </button>
+
+  <button type="button" class="image-error" [class.display]="imageError === 'too-big'" (click)="clearImageError()">
+    L'image choisie est trop grande.
+  </button>
+
+  <button type="button" class="image-error" [class.display]="imageError === 'file-read'" (click)="clearImageError()">
+    Une erreur est survenue pendant le téléchargement du fichier.
+  </button>
+
+  <button type="button" class="image-error" [class.display]="imageError === 'image-create'" (click)="clearImageError()">
+    Impossible d'ouvrir cette image.
   </button>
 
 </div>

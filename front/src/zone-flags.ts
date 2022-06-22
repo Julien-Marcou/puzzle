@@ -4,7 +4,6 @@
 (window as ZoneGlobalConfigurations).__Zone_disable_geolocation = true;
 (window as ZoneGlobalConfigurations).__Zone_disable_blocking = true;
 (window as ZoneGlobalConfigurations).__Zone_disable_MutationObserver = true;
-(window as ZoneGlobalConfigurations).__Zone_disable_FileReader = true;
 (window as ZoneGlobalConfigurations).__Zone_disable_requestAnimationFrame = true;
 
 const disabledEvents: Array<keyof HTMLElementEventMap | keyof WindowEventHandlersEventMap | keyof WebSocketEventMap | keyof XMLHttpRequestEventTargetEventMap> = [

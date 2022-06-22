@@ -6,6 +6,8 @@ import { PuzzlePreview } from '../../models/puzzle-preview';
 import { PuzzleSpritesheet } from '../../models/puzzle-spritesheet';
 import type { Point } from '../../models/geometry';
 
+type ImageError = 'loading' | 'too-heavy' | 'too-small' | 'too-big' | 'file-read' | 'image-create';
+
 @Component({
   selector: 'app-puzzle-preview',
   templateUrl: './puzzle-preview.component.html',
@@ -13,12 +15,13 @@ import type { Point } from '../../models/geometry';
 })
 export class PuzzlePreviewComponent implements OnInit {
 
+  @ViewChild('puzzleFileInput', {static: true}) private puzzleFileInput!: ElementRef<HTMLInputElement>;
   @ViewChild('puzzlePreview', {static: true}) private puzzlePreviewRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('puzzleGameWrapper', {static: true}) private puzzleGameWrapperRef!: ElementRef<HTMLCanvasElement>;
 
   public readonly puzzleImageFolder = '/assets/puzzles';
   public readonly puzzleThumbnailFolder = '/assets/puzzle-thumbnails';
-  public readonly puzzleImages = [
+  public readonly puzzles = [
     'the-great-wave-off-kanagawa.jpg',
     'mandalas-by-viscious-speed.jpg',
     'blue-marble-western-hemisphere-by-nasa.jpg',
@@ -46,8 +49,8 @@ export class PuzzlePreviewComponent implements OnInit {
   ];
 
   public puzzleImage?: ImageBitmap;
-  public selectedPuzzleImage?: string;
-  public loadingPuzzleImage?: string;
+  public selectedPuzzle?: string;
+  public loadingPuzzle?: string;
   public selectedPieceSizeIndex = 1;
   public validPieceSizes: Array<number> = [50, 100, 200, 400, 500];
   public puzzleOffset: Point = {x: 0, y: 0};
@@ -55,19 +58,34 @@ export class PuzzlePreviewComponent implements OnInit {
   public horizontalPieceCount = 10;
   public verticalPieceCount = 10;
   public gameStarted = false;
-  public imageLoadingError = false;
+  public imageError?: ImageError;
 
   private readonly minPieceCountPerAxis = 4; // 12 pieces
   private readonly maxPieceCountPerAxis = 50; // 2500 pieces
   private readonly minPieceSizeConstraint = 60; // In pixels
   private readonly maxPieceSizeConstraint = 600; // In pixels
-  private readonly imageLoadingErrorDelay = 5000; // In milliseconds
+  private readonly maxFileSize = 15 * 1024 * 1024; // In Bytes
+  private readonly minPuzzleImageWidth = 450; // In pixels
+  private readonly minPuzzleImageHeight = 450; // In pixels
+  private readonly maxPuzzleImageWidth = 4096; // In pixels
+  private readonly maxPuzzleImageHeight = 4096; // In pixels
+  private readonly imageErrorDelay = 5000; // In milliseconds
   private puzzleGame?: PuzzleGame;
   private imageLoading?: AbortablePromise<ImageBitmap>;
   private renderingPreview = false;
-  private imageLoadingErrorTimeout?: number;
+  private imageErrorTimeout?: number;
 
   public async ngOnInit(): Promise<void> {
+    this.puzzleFileInput.nativeElement.addEventListener('dragover', () => {
+      this.puzzleFileInput.nativeElement.classList.add('drop');
+    });
+    this.puzzleFileInput.nativeElement.addEventListener('dragleave', () => {
+      this.puzzleFileInput.nativeElement.classList.remove('drop');
+    });
+    this.puzzleFileInput.nativeElement.addEventListener('drop', () => {
+      this.puzzleFileInput.nativeElement.classList.remove('drop');
+    });
+
     // Exec order :
     // - load puzzle image
     // - update puzzle image
@@ -75,43 +93,85 @@ export class PuzzlePreviewComponent implements OnInit {
     // - update piece size
     // - update puzzle size
     // - render puzzle preview
-    await this.setPuzzleImage(this.puzzleImages[0]);
+    await this.setPuzzle(this.puzzles[0]);
     // await this.startPuzzle();
   }
 
-  public clearImageLoadingError(): void {
-    if (this.imageLoadingErrorTimeout) {
-      window.clearTimeout(this.imageLoadingErrorTimeout);
+  public async setCustomPuzzle(event: Event): Promise<void> {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) {
+      return;
     }
-    this.imageLoadingError = false;
-  }
 
-  public async setPuzzleImage(puzzleImageUrl: string): Promise<void> {
+    if (file.size > this.maxFileSize) {
+      this.puzzleFileInput.nativeElement.value = '';
+      this.displayImageError('too-heavy');
+      return;
+    }
+
     if (this.imageLoading) {
       await this.imageLoading.abort();
     }
 
-    this.loadingPuzzleImage = puzzleImageUrl;
+    // TODO add abortable promise for this
+    const fileReader = new FileReader();
+    fileReader.onload = async (): Promise<void> => {
+      try {
+        const puzzleImageBlob = new Blob([fileReader.result as ArrayBuffer]);
+        const puzzleImage = await createImageBitmap(puzzleImageBlob);
+        if (puzzleImage.width > this.maxPuzzleImageWidth || puzzleImage.height > this.maxPuzzleImageHeight) {
+          this.puzzleFileInput.nativeElement.value = '';
+          this.displayImageError('too-big');
+          return;
+        }
+        if (puzzleImage.width < this.minPuzzleImageWidth || puzzleImage.height < this.minPuzzleImageHeight) {
+          this.puzzleFileInput.nativeElement.value = '';
+          this.displayImageError('too-small');
+          return;
+        }
+        this.updatePuzzleImage(puzzleImage);
+        this.selectedPuzzle = undefined;
+      }
+      catch (error) {
+        console.error(error);
+        this.puzzleFileInput.nativeElement.value = '';
+        this.displayImageError('image-create');
+        return;
+      }
+    };
+    fileReader.onerror = (): void => {
+      this.displayImageError('file-read');
+    };
+    fileReader.readAsArrayBuffer(file);
+  }
+
+  public clearImageError(): void {
+    if (this.imageErrorTimeout) {
+      window.clearTimeout(this.imageErrorTimeout);
+    }
+    this.imageError = undefined;
+  }
+
+  public async setPuzzle(puzzleImageUrl: string): Promise<void> {
+    if (this.imageLoading) {
+      await this.imageLoading.abort();
+    }
+
+    this.loadingPuzzle = puzzleImageUrl;
     this.imageLoading = this.loadImage(`${this.puzzleImageFolder}/${puzzleImageUrl}`);
     try {
       this.updatePuzzleImage(await this.imageLoading);
-      this.selectedPuzzleImage = puzzleImageUrl;
+      this.selectedPuzzle = puzzleImageUrl;
+      this.puzzleFileInput.nativeElement.value = '';
     }
     catch (error) {
       if (!this.imageLoading.aborted) {
         console.error(error);
-        if (this.imageLoadingErrorTimeout) {
-          window.clearTimeout(this.imageLoadingErrorTimeout);
-        }
-        this.imageLoadingError = true;
-        this.imageLoadingErrorTimeout = window.setTimeout(() => {
-          this.imageLoadingErrorTimeout = undefined;
-          this.imageLoadingError = false;
-        }, this.imageLoadingErrorDelay);
+        this.displayImageError('loading');
       }
     }
     finally {
-      this.loadingPuzzleImage = undefined;
+      this.loadingPuzzle = undefined;
       this.imageLoading = undefined;
     }
   }
@@ -262,6 +322,17 @@ export class PuzzlePreviewComponent implements OnInit {
         reject(error);
       }
     });
+  }
+
+  private displayImageError(error: ImageError): void {
+    if (this.imageErrorTimeout) {
+      window.clearTimeout(this.imageErrorTimeout);
+    }
+    this.imageError = error;
+    this.imageErrorTimeout = window.setTimeout(() => {
+      this.imageErrorTimeout = undefined;
+      this.imageError = undefined;
+    }, this.imageErrorDelay);
   }
 
 }

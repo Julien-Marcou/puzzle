@@ -413,6 +413,7 @@ export class PuzzleGame {
         piece.x = validX;
         piece.y = validY;
         piece.lock();
+        // TODO create sub assembly when 2 pieces can be assembled together
         this.movePieceToBottom(piece);
         this.checkIfPuzzleIsFinished();
       }
