@@ -4,9 +4,24 @@ import { AXIS_TO_DIMENSION, VALID_AXES } from '../../models/geometry';
 import { PuzzleGame } from '../../models/puzzle-game';
 import { PuzzlePreview } from '../../models/puzzle-preview';
 import { PuzzleSpritesheet } from '../../models/puzzle-spritesheet';
+import { FileFetchError, FileReadError, ImageCreateError, ImageLoader } from '../../services/image-loader';
 import type { Point } from '../../models/geometry';
 
-type ImageError = 'loading' | 'too-heavy' | 'too-small' | 'too-big' | 'file-read' | 'image-create';
+class ImageTooBigError extends Error {
+  constructor(message: string, options?: ErrorOptions) {
+    super(message, options);
+    this.name = 'ImageTooBigError';
+  }
+}
+
+class ImageTooSmallError extends Error {
+  constructor(message: string, options?: ErrorOptions) {
+    super(message, options);
+    this.name = 'ImageTooSmallError';
+  }
+}
+
+type ImageError = 'unknown' | 'too-heavy' | 'too-small' | 'too-big' | 'file-read' | 'file-fetch' | 'image-create';
 
 @Component({
   selector: 'app-puzzle-preview',
@@ -51,6 +66,8 @@ export class PuzzlePreviewComponent implements OnInit {
   public puzzleImage?: ImageBitmap;
   public selectedPuzzle?: string;
   public loadingPuzzle?: string;
+  public selectedCustomPuzzle?: string;
+  public loadingCustomPuzzle?: string;
   public selectedPieceSizeIndex = 1;
   public validPieceSizes: Array<number> = [50, 100, 200, 400, 500];
   public puzzleOffset: Point = {x: 0, y: 0};
@@ -94,7 +111,6 @@ export class PuzzlePreviewComponent implements OnInit {
     // - update puzzle size
     // - render puzzle preview
     await this.setPuzzle(this.puzzles[0]);
-    // await this.startPuzzle();
   }
 
   public async setCustomPuzzle(event: Event): Promise<void> {
@@ -102,47 +118,20 @@ export class PuzzlePreviewComponent implements OnInit {
     if (!file) {
       return;
     }
+    this.puzzleFileInput.nativeElement.value = '';
 
     if (file.size > this.maxFileSize) {
-      this.puzzleFileInput.nativeElement.value = '';
       this.displayImageError('too-heavy');
       return;
     }
 
-    if (this.imageLoading) {
-      await this.imageLoading.abort();
+    this.loadingCustomPuzzle = file.name;
+    const updated = await this.updatePuzzleImage(ImageLoader.loadFromFile(file));
+    this.loadingCustomPuzzle = undefined;
+    if (updated) {
+      this.selectedPuzzle = undefined;
+      this.selectedCustomPuzzle = file.name;
     }
-
-    // TODO add abortable promise for this
-    const fileReader = new FileReader();
-    fileReader.onload = async (): Promise<void> => {
-      try {
-        const puzzleImageBlob = new Blob([fileReader.result as ArrayBuffer]);
-        const puzzleImage = await createImageBitmap(puzzleImageBlob);
-        if (puzzleImage.width > this.maxPuzzleImageWidth || puzzleImage.height > this.maxPuzzleImageHeight) {
-          this.puzzleFileInput.nativeElement.value = '';
-          this.displayImageError('too-big');
-          return;
-        }
-        if (puzzleImage.width < this.minPuzzleImageWidth || puzzleImage.height < this.minPuzzleImageHeight) {
-          this.puzzleFileInput.nativeElement.value = '';
-          this.displayImageError('too-small');
-          return;
-        }
-        this.updatePuzzleImage(puzzleImage);
-        this.selectedPuzzle = undefined;
-      }
-      catch (error) {
-        console.error(error);
-        this.puzzleFileInput.nativeElement.value = '';
-        this.displayImageError('image-create');
-        return;
-      }
-    };
-    fileReader.onerror = (): void => {
-      this.displayImageError('file-read');
-    };
-    fileReader.readAsArrayBuffer(file);
   }
 
   public clearImageError(): void {
@@ -153,26 +142,12 @@ export class PuzzlePreviewComponent implements OnInit {
   }
 
   public async setPuzzle(puzzleImageUrl: string): Promise<void> {
-    if (this.imageLoading) {
-      await this.imageLoading.abort();
-    }
-
     this.loadingPuzzle = puzzleImageUrl;
-    this.imageLoading = this.loadImage(`${this.puzzleImageFolder}/${puzzleImageUrl}`);
-    try {
-      this.updatePuzzleImage(await this.imageLoading);
+    const updated = await this.updatePuzzleImage(ImageLoader.loadFromUrl(`${this.puzzleImageFolder}/${puzzleImageUrl}`));
+    this.loadingPuzzle = undefined;
+    if (updated) {
       this.selectedPuzzle = puzzleImageUrl;
-      this.puzzleFileInput.nativeElement.value = '';
-    }
-    catch (error) {
-      if (!this.imageLoading.aborted) {
-        console.error(error);
-        this.displayImageError('loading');
-      }
-    }
-    finally {
-      this.loadingPuzzle = undefined;
-      this.imageLoading = undefined;
+      this.selectedCustomPuzzle = undefined;
     }
   }
 
@@ -217,12 +192,54 @@ export class PuzzlePreviewComponent implements OnInit {
     }
   }
 
-  private async updatePuzzleImage(puzzleImage: ImageBitmap): Promise<void> {
-    if (this.puzzleImage) {
-      this.puzzleImage.close();
+  private async updatePuzzleImage(imageLoading: AbortablePromise<ImageBitmap>): Promise<boolean> {
+    if (this.imageLoading) {
+      await this.imageLoading.abort();
     }
-    this.puzzleImage = puzzleImage;
-    await this.updateValidPieceSizes();
+
+    let success = false;
+    this.imageLoading = imageLoading;
+    try {
+      const puzzleImage = await imageLoading;
+      if (puzzleImage.width > this.maxPuzzleImageWidth || puzzleImage.height > this.maxPuzzleImageHeight) {
+        throw new ImageTooBigError('The image is too big to be used');
+      }
+      if (puzzleImage.width < this.minPuzzleImageWidth || puzzleImage.height < this.minPuzzleImageHeight) {
+        throw new ImageTooSmallError('The image is too small to be used');
+      }
+      if (this.puzzleImage) {
+        this.puzzleImage.close();
+      }
+      this.puzzleImage = puzzleImage;
+      await this.updateValidPieceSizes();
+      success = true;
+    }
+    catch (error) {
+      if (!this.imageLoading.aborted) {
+        console.error(error);
+        if (error instanceof ImageTooBigError) {
+          this.displayImageError('too-big');
+        }
+        else if (error instanceof ImageTooSmallError) {
+          this.displayImageError('too-small');
+        }
+        else if (error instanceof FileReadError) {
+          this.displayImageError('file-read');
+        }
+        else if (error instanceof FileFetchError) {
+          this.displayImageError('file-fetch');
+        }
+        else if (error instanceof ImageCreateError) {
+          this.displayImageError('image-create');
+        }
+        else {
+          this.displayImageError('unknown');
+        }
+      }
+    }
+    this.imageLoading = undefined;
+
+    return success;
   }
 
   private async updateValidPieceSizes(): Promise<void> {
@@ -304,23 +321,6 @@ export class PuzzlePreviewComponent implements OnInit {
         );
         resolve();
       });
-    });
-  }
-
-  private loadImage(src: string): AbortablePromise<ImageBitmap> {
-    return new AbortablePromise(async (resolve, reject, abortSignal) => {
-      try {
-        const response = await fetch(src, {signal: abortSignal});
-        if (response.status !== 200) {
-          throw new Error(`Image fetching ended with HTTP error code ${response.status}`);
-        }
-        const blob = await response.blob();
-        const imageBitmap = await createImageBitmap(blob);
-        resolve(imageBitmap);
-      }
-      catch (error) {
-        reject(error);
-      }
     });
   }
 

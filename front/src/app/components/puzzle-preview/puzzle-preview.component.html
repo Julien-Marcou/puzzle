@@ -27,7 +27,7 @@
     </div>
 
     <label class="select-file-button" for="puzzle-file-input">
-      <input class="file-input" id="puzzle-file-input" type="file" (input)="setCustomPuzzle($event)" multiple="false" #puzzleFileInput>
+      <input [attr.title]="selectedCustomPuzzle ? selectedCustomPuzzle : null" class="file-input" id="puzzle-file-input" type="file" (input)="setCustomPuzzle($event)" multiple="false" #puzzleFileInput>
       <div class="file-button">
         <div class="icon">
           <span class="material-icons" aria-hidden="true">file_upload</span>
@@ -50,7 +50,7 @@
         class="puzzle-size-input"
         [(ngModel)]="selectedPieceSizeIndex"
         (ngModelChange)="updatePieceSize()"
-        [disabled]="loadingPuzzle || !puzzleImage"
+        [disabled]="loadingPuzzle || loadingCustomPuzzle || !puzzleImage"
         type="range"
         step="1"
         min="0"
@@ -73,7 +73,7 @@
       <div class="label">
         Preview du puzzle :
       </div>
-      <div class="puzzle-preview-output" [class.loading]="loadingPuzzle || !puzzleImage">
+      <div class="puzzle-preview-output" [class.loading]="loadingPuzzle || loadingCustomPuzzle || !puzzleImage">
         <canvas class="puzzle-preview-canvas" #puzzlePreview></canvas>
         <div class="loader">
           Chargement...
@@ -88,13 +88,13 @@
       type="button"
       class="start-puzzle-button"
       (click)="startPuzzle()"
-      [disabled]="loadingPuzzle || !puzzleImage">
+      [disabled]="loadingPuzzle || loadingCustomPuzzle || !puzzleImage">
       Démarrer le puzzle
     </button>
   </div>
 
-  <button type="button" class="image-error" [class.display]="imageError === 'loading'" (click)="clearImageError()">
-    Une erreur est survenue pendant le chargement du puzzle.
+  <button type="button" class="image-error" [class.display]="imageError === 'unknown'" (click)="clearImageError()">
+    Une erreur innatendu est survenue.
   </button>
 
   <button type="button" class="image-error" [class.display]="imageError === 'too-heavy'" (click)="clearImageError()">
@@ -110,11 +110,15 @@
   </button>
 
   <button type="button" class="image-error" [class.display]="imageError === 'file-read'" (click)="clearImageError()">
-    Une erreur est survenue pendant le téléchargement du fichier.
+    Une erreur est survenue pendant le lecture de l'image.
+  </button>
+
+  <button type="button" class="image-error" [class.display]="imageError === 'file-fetch'" (click)="clearImageError()">
+    Une erreur est survenue pendant le téléchargement de l'image.
   </button>
 
   <button type="button" class="image-error" [class.display]="imageError === 'image-create'" (click)="clearImageError()">
-    Impossible d'ouvrir cette image.
+    Une erreur est survenue pendant le chargement de l'image.
   </button>
 
 </div>
