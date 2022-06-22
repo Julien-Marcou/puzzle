@@ -1,5 +1,5 @@
-import { Edge } from './edge';
-import type { BezierPath, StraightPath } from './geometry';
+import { Edge } from '../models/edge';
+import type { BezierPath, StraightPath } from '../models/geometry';
 
 type Repetition = 'repeat' | 'repeat-x' | 'repeat-y' | 'no-repeat';
 

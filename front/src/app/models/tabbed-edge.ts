@@ -1,7 +1,8 @@
-import { Canvas } from './canvas';
-import { Edge } from './edge';
-import { Axis, Geometry } from './geometry';
+import { Canvas } from '../services/canvas';
+import { Geometry } from '../services/geometry';
+import { Axis } from './geometry';
 import { PieceShape } from './piece-shape';
+import type { Edge } from './edge';
 import type { BezierPath } from './geometry';
 
 export class TabbedEdge implements Edge {

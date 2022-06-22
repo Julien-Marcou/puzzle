@@ -1,4 +1,4 @@
-import { Canvas } from './canvas';
+import { Canvas } from '../services/canvas';
 import { Edge } from './edge';
 import { Axis, Point, VALID_AXES } from './geometry';
 import { TabbedEdge } from './tabbed-edge';

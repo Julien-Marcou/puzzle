@@ -1,5 +1,5 @@
 import { BaseTexture, MIPMAP_MODES, MSAA_QUALITY, SCALE_MODES, Spritesheet, Texture } from 'pixi.js';
-import { Canvas } from './canvas';
+import { Canvas } from '../services/canvas';
 import { Edge } from './edge';
 import { Axis, Point } from './geometry';
 import { PieceShape } from './piece-shape';
@@ -7,7 +7,7 @@ import { StraightEdge } from './straight-edge';
 import { TabbedEdge } from './tabbed-edge';
 import type { ISpritesheetData } from 'pixi.js';
 
-// Represent the top-left (included) and the bottom-right (exclued) coordinates of a quadrant.
+// Represent the top-left (included) and the bottom-right (excluded) coordinates of a quadrant.
 // This is used to split the original spritesheet in 4 spritesheets
 // when the puzzle's texture exceed the maximum texture size allowed by the device.
 type Quadrant = {start: Point; end: Point};
