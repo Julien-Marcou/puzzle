@@ -40,8 +40,8 @@ const enum ManipulationType {
 
 export class PuzzleGame {
 
-  private readonly gameBackgroundColor = 0x333333;
-  private readonly puzzleBackgroundColor = 0x292929;
+  private readonly gameBackgroundColor = 0x262524;
+  private readonly puzzleBackgroundColor = 0x1a1918;
   private readonly gamePadding = 40;
   private readonly gameBorderThickness = 3;
 

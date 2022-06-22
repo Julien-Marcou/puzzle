@@ -113,6 +113,23 @@ export class PuzzlePreviewComponent implements OnInit {
     await this.setPuzzle(this.puzzles[0]);
   }
 
+  public clearImageError(): void {
+    if (this.imageErrorTimeout) {
+      window.clearTimeout(this.imageErrorTimeout);
+    }
+    this.imageError = undefined;
+  }
+
+  public async setPuzzle(puzzleImageUrl: string): Promise<void> {
+    this.loadingPuzzle = puzzleImageUrl;
+    const updated = await this.updatePuzzleImage(ImageLoader.loadFromUrl(`${this.puzzleImageFolder}/${puzzleImageUrl}`));
+    this.loadingPuzzle = undefined;
+    if (updated) {
+      this.selectedPuzzle = puzzleImageUrl;
+      this.selectedCustomPuzzle = undefined;
+    }
+  }
+
   public async setCustomPuzzle(event: Event): Promise<void> {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) {
@@ -131,23 +148,6 @@ export class PuzzlePreviewComponent implements OnInit {
     if (updated) {
       this.selectedPuzzle = undefined;
       this.selectedCustomPuzzle = file.name;
-    }
-  }
-
-  public clearImageError(): void {
-    if (this.imageErrorTimeout) {
-      window.clearTimeout(this.imageErrorTimeout);
-    }
-    this.imageError = undefined;
-  }
-
-  public async setPuzzle(puzzleImageUrl: string): Promise<void> {
-    this.loadingPuzzle = puzzleImageUrl;
-    const updated = await this.updatePuzzleImage(ImageLoader.loadFromUrl(`${this.puzzleImageFolder}/${puzzleImageUrl}`));
-    this.loadingPuzzle = undefined;
-    if (updated) {
-      this.selectedPuzzle = puzzleImageUrl;
-      this.selectedCustomPuzzle = undefined;
     }
   }
 

@@ -258,17 +258,26 @@
   .close-puzzle-button, .debug-webgl-button {
     z-index: 1;
     position: absolute;
-    left: 10px;
+    top: 10px;
+    left: calc(50% - 100px);
     width: 200px;
+    background-color: #32312f;
+    color: #eceae8;
     text-align: center;
+    text-shadow: 0 0 2px #000;
+
+    &:hover, &:focus-visible {
+      background-color: #50504a;
+      color: #fff;
+    }
   }
 
   .close-puzzle-button {
-    top: 145px;
+    top: 10px;
   }
 
   .debug-webgl-button {
     display: none;
-    top: calc(145px + 10px + 2.55rem);
+    top: calc(20px + 2.55rem);
   }
 }
