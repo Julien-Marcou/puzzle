@@ -77,15 +77,16 @@ export class PuzzlePreviewComponent implements OnInit {
   public gameStarted = false;
   public imageError?: ImageError;
 
+  protected readonly maxFileSize = 15 * 1024 * 1024; // In Bytes
+  protected readonly minPuzzleImageWidth = 450; // In pixels
+  protected readonly minPuzzleImageHeight = 450; // In pixels
+  protected readonly maxPuzzleImageWidth = 4096; // In pixels
+  protected readonly maxPuzzleImageHeight = 4096; // In pixels
+
   private readonly minPieceCountPerAxis = 4; // 12 pieces
   private readonly maxPieceCountPerAxis = 50; // 2500 pieces
   private readonly minPieceSizeConstraint = 60; // In pixels
   private readonly maxPieceSizeConstraint = 600; // In pixels
-  private readonly maxFileSize = 15 * 1024 * 1024; // In Bytes
-  private readonly minPuzzleImageWidth = 450; // In pixels
-  private readonly minPuzzleImageHeight = 450; // In pixels
-  private readonly maxPuzzleImageWidth = 4096; // In pixels
-  private readonly maxPuzzleImageHeight = 4096; // In pixels
   private readonly imageErrorDelay = 5000; // In milliseconds
   private puzzleGame?: PuzzleGame;
   private imageLoading?: AbortablePromise<ImageBitmap>;

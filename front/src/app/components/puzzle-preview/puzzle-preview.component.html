@@ -94,19 +94,19 @@
   </div>
 
   <button type="button" class="image-error" [class.display]="imageError === 'unknown'" (click)="clearImageError()">
-    Une erreur innatendu est survenue.
+    Une erreur inattendue s'est produite.
   </button>
 
   <button type="button" class="image-error" [class.display]="imageError === 'too-heavy'" (click)="clearImageError()">
-    L'image choisie est trop lourde.
+    L'image choisie est trop lourde. Elle doit faire maxiumum {{ maxFileSize }}Mo.
   </button>
 
   <button type="button" class="image-error" [class.display]="imageError === 'too-small'" (click)="clearImageError()">
-    L'image choisie est trop petite.
+    L'image choisie est trop petite. Elle doit faire au minimum {{ minPuzzleImageWidth }} par {{ minPuzzleImageHeight }} pixels.
   </button>
 
   <button type="button" class="image-error" [class.display]="imageError === 'too-big'" (click)="clearImageError()">
-    L'image choisie est trop grande.
+    L'image choisie est trop grande. Elle doit faire au minimum {{ maxPuzzleImageWidth }} par {{ maxPuzzleImageHeight }} pixels.
   </button>
 
   <button type="button" class="image-error" [class.display]="imageError === 'file-read'" (click)="clearImageError()">
