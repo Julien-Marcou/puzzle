@@ -1,10 +1,16 @@
 import { Application, Container, Graphics, Text, LINE_JOIN } from 'pixi.js';
 import { environment } from '../../environments/environment';
 import { FpsGraph } from '../display-objects/fps-graph';
+import { PieceGroup } from '../display-objects/piece-group';
 import { PieceSprite } from '../display-objects/piece-sprite';
 import type { Point } from './geometry';
 import type { PuzzleSpritesheet } from './puzzle-spritesheet';
 import type { Renderer, InteractionManager, AccessibilityManager, TilingSpriteRenderer, Extract } from 'pixi.js';
+
+type GroupSnapping = {
+  pieceGroup: PieceGroup;
+  snapPosition: Point;
+};
 
 type PointerId = number;
 type Pointer = {
@@ -24,8 +30,8 @@ type ViewportDragInitialState = {
   dragOrigin: Point;
   viewportOrigin: Point;
 };
-type PieceDragInitialState = {
-  piece: PieceSprite;
+type PieceGroupDragInitialState = {
+  pieceGroup: PieceGroup;
   dragOrigin: Point;
   pieceOrigin: Point;
 };
@@ -52,7 +58,7 @@ export class PuzzleGame {
   private readonly playableAreaHeight: number;
   private readonly puzzleOrigin: Point;
   private readonly pieceSnappingMargin: number;
-  private readonly pieces: Array<PieceSprite> = [];
+  private readonly pieces: Array<Array<PieceSprite>> = [];
 
   private readonly canvas: HTMLCanvasElement;
   private readonly application: Application;
@@ -68,13 +74,13 @@ export class PuzzleGame {
   private canInteract = false;
   private initialPinch?: PinchToZoomInitialState;
   private initalViewportDrag?: ViewportDragInitialState;
-  private hoveredPiece?: PieceSprite;
-  private initialPieceDrag?: PieceDragInitialState;
+  private hoveredPieceGroup?: PieceGroup;
+  private initialPieceGroupDrag?: PieceGroupDragInitialState;
 
   constructor(
     private readonly wrapper: HTMLElement,
     private readonly spritesheet: PuzzleSpritesheet,
-    private readonly pieceSize: number,
+    public readonly pieceSize: number,
     public readonly horizontalPieceCount: number,
     public readonly verticalPieceCount: number,
   ) {
@@ -271,15 +277,19 @@ export class PuzzleGame {
     const pieceTextures = await this.spritesheet.parse(maxTextureSize);
 
     for (let x = 0; x < this.horizontalPieceCount; x++) {
+      const pieceColumn = [];
       for (let y = 0; y < this.verticalPieceCount; y++) {
         const pieceSprite = new PieceSprite(
           {x: x, y: y},
           pieceTextures.textures[x][y],
           pieceTextures.alphaChannels[x][y],
         );
-        this.pieces.push(pieceSprite);
-        this.pieceContainer.addChild(pieceSprite);
+        const pieceGroup = new PieceGroup();
+        pieceGroup.addChild(pieceSprite);
+        pieceColumn.push(pieceSprite);
+        this.pieceContainer.addChild(pieceGroup);
       }
+      this.pieces.push(pieceColumn);
     }
     this.shufflePieces();
   }
@@ -338,41 +348,41 @@ export class PuzzleGame {
       const previousCanInteract = this.canInteract;
       const canvasPosition = this.getCanvasPosition(event);
       const mousePositionInPieceContainer = this.getPieceContainerPosition(canvasPosition);
-      const piece = this.getPieceAt(mousePositionInPieceContainer);
-      if (this.hoveredPiece && this.hoveredPiece !== piece) {
-        this.hoveredPiece.removeOutline();
+      const pieceGroup = this.getPieceGroupAt(mousePositionInPieceContainer);
+      if (this.hoveredPieceGroup && this.hoveredPieceGroup !== pieceGroup) {
+        this.hoveredPieceGroup.removeOutline();
       }
-      if (!piece) {
-        this.hoveredPiece = undefined;
+      if (!pieceGroup) {
+        this.hoveredPieceGroup = undefined;
       }
-      else if (this.hoveredPiece !== piece) {
-        this.hoveredPiece = piece;
-        this.hoveredPiece.addOutline();
+      else if (this.hoveredPieceGroup !== pieceGroup) {
+        this.hoveredPieceGroup = pieceGroup;
+        this.hoveredPieceGroup.addOutline();
       }
-      this.canInteract = !!this.hoveredPiece;
+      this.canInteract = !!this.hoveredPieceGroup;
       if (previousCanInteract !== this.canInteract) {
         this.canvas.setAttribute('data-can-interact', this.canInteract ? 'true' : 'false');
       }
     };
 
     const releasePieceHover = (): void => {
-      if (!this.hoveredPiece) {
+      if (!this.hoveredPieceGroup) {
         return;
       }
-      this.hoveredPiece.removeOutline();
-      this.hoveredPiece = undefined;
+      this.hoveredPieceGroup.removeOutline();
+      this.hoveredPieceGroup = undefined;
     };
 
     const startPieceDragging = (): void => {
-      if (!this.hoveredPiece) {
+      if (!this.hoveredPieceGroup) {
         return;
       }
       const [capturedPointer] = this.capturedPointers.values();
-      const piece = this.hoveredPiece;
+      const piece = this.hoveredPieceGroup;
       releasePieceHover();
       const mousePositionInPieceContainer = this.getPieceContainerPosition(capturedPointer.position);
-      this.initialPieceDrag = {
-        piece: piece,
+      this.initialPieceGroupDrag = {
+        pieceGroup: piece,
         dragOrigin: {
           x: mousePositionInPieceContainer.x,
           y: mousePositionInPieceContainer.y,
@@ -386,41 +396,50 @@ export class PuzzleGame {
     };
 
     const computePieceDragging = (): void => {
-      if (!this.initialPieceDrag) {
+      if (!this.initialPieceGroupDrag) {
         return;
       }
       const [capturedPointer] = this.capturedPointers.values();
       const mousePositionInPieceContainer = this.getPieceContainerPosition(capturedPointer.position);
       const dragVector = {
-        x: mousePositionInPieceContainer.x - this.initialPieceDrag.dragOrigin.x,
-        y: mousePositionInPieceContainer.y - this.initialPieceDrag.dragOrigin.y,
+        x: mousePositionInPieceContainer.x - this.initialPieceGroupDrag.dragOrigin.x,
+        y: mousePositionInPieceContainer.y - this.initialPieceGroupDrag.dragOrigin.y,
       };
-      const x = Math.round(this.initialPieceDrag.pieceOrigin.x + dragVector.x);
-      const y = Math.round(this.initialPieceDrag.pieceOrigin.y + dragVector.y);
+      const x = Math.round(this.initialPieceGroupDrag.pieceOrigin.x + dragVector.x);
+      const y = Math.round(this.initialPieceGroupDrag.pieceOrigin.y + dragVector.y);
       const minX = - this.pieceContainer.x - this.spritesheet.pieceMargin;
       const minY = - this.pieceContainer.y - this.spritesheet.pieceMargin;
       const maxX = this.playableAreaWidth - this.pieceContainer.x - this.spritesheet.pieceSpriteSize + this.spritesheet.pieceMargin;
       const maxY = this.playableAreaHeight - this.pieceContainer.y - this.spritesheet.pieceSpriteSize + this.spritesheet.pieceMargin;
-      this.initialPieceDrag.piece.x = Math.min(Math.max(x, minX), maxX);
-      this.initialPieceDrag.piece.y = Math.min(Math.max(y, minY), maxY);
+      this.initialPieceGroupDrag.pieceGroup.x = Math.min(Math.max(x, minX), maxX);
+      this.initialPieceGroupDrag.pieceGroup.y = Math.min(Math.max(y, minY), maxY);
     };
 
     const stopPieceDragging = (): void => {
-      if (!this.initialPieceDrag) {
+      if (!this.initialPieceGroupDrag) {
         return;
       }
-      const piece = this.initialPieceDrag.piece;
-      const validX = (piece.cell.x * this.pieceSize) - this.spritesheet.pieceMargin;
-      const validY = (piece.cell.y * this.pieceSize) - this.spritesheet.pieceMargin;
-      if (Math.abs(piece.x - validX) < this.pieceSnappingMargin && Math.abs(piece.y - validY) < this.pieceSnappingMargin) {
-        piece.x = validX;
-        piece.y = validY;
-        piece.lock();
-        // TODO create sub assembly when 2 pieces can be assembled together
-        this.movePieceToBottom(piece);
+      const pieceGroup = this.initialPieceGroupDrag.pieceGroup;
+      this.initialPieceGroupDrag = undefined;
+
+      const lockPosition = this.getPieceGroupLockPosition(pieceGroup);
+      if (lockPosition) {
+        pieceGroup.x = lockPosition.x;
+        pieceGroup.y = lockPosition.y;
+        pieceGroup.lock();
+        this.movePieceToBottom(pieceGroup);
         this.checkIfPuzzleIsFinished();
+        return;
       }
-      this.initialPieceDrag = undefined;
+
+      const snapping = this.getPieceGroupSnapping(pieceGroup);
+      if (snapping) {
+        pieceGroup.x = snapping.snapPosition.x;
+        pieceGroup.y = snapping.snapPosition.y;
+        pieceGroup.mergeWith(snapping.pieceGroup);
+        this.pieceContainer.removeChild(pieceGroup);
+        return;
+      }
     };
 
     const startViewportDragging = (): void => {
@@ -578,7 +597,7 @@ export class PuzzleGame {
         this.viewportManipulation = undefined;
       }
       else if (this.capturedPointers.size === 1) {
-        if (this.viewportState === ViewportState.Idle && this.hoveredPiece) {
+        if (this.viewportState === ViewportState.Idle && this.hoveredPieceGroup) {
             this.viewportState = ViewportState.Interaction;
             this.viewportManipulation = undefined;
         }
@@ -676,19 +695,55 @@ export class PuzzleGame {
     });
   }
 
-  private getPieceAt(point: Point): PieceSprite | undefined {
-    for (let i = this.pieces.length - 1; i >= 0; i--) {
-      const piece = this.pieces[i];
-      if (!piece.isLocked() && piece.isPointInBoundingBox(point) && !piece.isPixelTransparentAt(point)) {
-        return piece;
+  private getPieceGroupAt(point: Point): PieceGroup | undefined {
+    for (let i = this.pieceContainer.children.length - 1; i >= 0; i--) {
+      const pieceGroup = this.pieceContainer.children[i] as PieceGroup;
+      if (pieceGroup.hitBy(point)) {
+        return pieceGroup;
       }
     }
     return undefined;
   }
 
-  private checkIfPuzzleIsFinished(): void {
-    if (!this.pieces.every((piece) => piece.isLocked())) {
-      return;
+  private getPieceGroupLockPosition(pieceGroup: PieceGroup): Point | undefined {
+    const piece = pieceGroup.children[0] as PieceSprite;
+    const validX = (piece.cell.x * this.pieceSize) - this.spritesheet.pieceMargin;
+    const validY = (piece.cell.y * this.pieceSize) - this.spritesheet.pieceMargin;
+    if (Math.abs(pieceGroup.x - validX) < this.pieceSnappingMargin && Math.abs(pieceGroup.y - validY) < this.pieceSnappingMargin) {
+      return {x: validX, y: validY};
+    }
+    return undefined;
+  }
+
+  private getPieceGroupSnapping(pieceGroup: PieceGroup): GroupSnapping | undefined {
+    const pieces = pieceGroup.children as Array<PieceSprite>;
+    const neighborOffsets = [
+      {x: -1, y: 0},
+      {x: 1, y: 0},
+      {x: 0, y: -1},
+      {x: 0, y: 1},
+    ];
+    for (const piece of pieces) {
+      for (const neighborOffset of neighborOffsets) {
+        const neighborPiece = this.pieces[piece.cell.x + neighborOffset.x]?.[piece.cell.y + neighborOffset.y];
+        if (neighborPiece && neighborPiece.parent !== pieceGroup) {
+          const validX = neighborPiece.parent.x + neighborPiece.x - (this.pieceSize * neighborOffset.x) - piece.x;
+          const validY = neighborPiece.parent.y + neighborPiece.y - (this.pieceSize * neighborOffset.y) - piece.y;
+          if (Math.abs(pieceGroup.x - validX) < this.pieceSnappingMargin && Math.abs(pieceGroup.y - validY) < this.pieceSnappingMargin) {
+            return {
+              pieceGroup: neighborPiece.parent as PieceGroup,
+              snapPosition: {x: validX, y: validY},
+            };
+          }
+        }
+      }
+    }
+    return undefined;
+  }
+
+  private checkIfPuzzleIsFinished(): boolean {
+    if (!this.pieceContainer.children.every((pieceGroup) => (pieceGroup as PieceGroup).isLocked())) {
+      return false;
     }
     const finishedText = new Text('GG', {
       fill: 0xffffff,
@@ -701,10 +756,11 @@ export class PuzzleGame {
     finishedText.x = Math.round((document.documentElement.clientWidth - finishedText.width) / 2);
     finishedText.y = Math.round((document.documentElement.clientHeight - finishedText.height) / 2);
     this.application.stage.addChild(finishedText);
+    return true;
   }
 
   private shufflePieces(): void {
-    const remainingPieces = [...this.pieces];
+    const remainingPieces = [...this.pieceContainer.children as Array<PieceGroup>];
     const horizontalSpriteCount = Math.floor(this.puzzleWidth / this.spritesheet.pieceSpriteSize);
     const verticalSpriteCount = Math.floor(this.puzzleHeight / this.spritesheet.pieceSpriteSize);
     const cellWidth = this.puzzleWidth / horizontalSpriteCount;
@@ -777,18 +833,12 @@ export class PuzzleGame {
     }
   }
 
-  private movePieceToTop(pieceToMove: PieceSprite): void {
-    const pieceIndex = this.pieces.findIndex((piece) => piece === pieceToMove);
-    this.pieces.splice(pieceIndex, 1);
-    this.pieces.push(pieceToMove);
+  private movePieceToTop(pieceToMove: PieceGroup): void {
     this.pieceContainer.removeChild(pieceToMove);
     this.pieceContainer.addChild(pieceToMove);
   }
 
-  private movePieceToBottom(pieceToMove: PieceSprite): void {
-    const pieceIndex = this.pieces.findIndex((piece) => piece === pieceToMove);
-    this.pieces.splice(pieceIndex, 1);
-    this.pieces.push(pieceToMove);
+  private movePieceToBottom(pieceToMove: PieceGroup): void {
     this.pieceContainer.removeChild(pieceToMove);
     this.pieceContainer.addChildAt(pieceToMove,0);
   }
