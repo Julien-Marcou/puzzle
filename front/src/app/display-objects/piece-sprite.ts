@@ -1,6 +1,6 @@
 import { OutlineFilter } from '@pixi/filter-outline';
 import { Sprite } from 'pixi.js';
-import type { Point } from './geometry';
+import type { Point } from '../models/geometry';
 import type { Texture } from 'pixi.js';
 
 export class PieceSprite extends Sprite {
