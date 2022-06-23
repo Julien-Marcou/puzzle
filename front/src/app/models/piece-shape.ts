@@ -1,4 +1,4 @@
-import { Edge } from './edge';
+import type { Edge } from './edge';
 
 export class PieceShape {
 

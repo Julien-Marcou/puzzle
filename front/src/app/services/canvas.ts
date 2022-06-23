@@ -1,4 +1,4 @@
-import { Edge } from '../models/edge';
+import type { Edge } from '../models/edge';
 import type { BezierPath, StraightPath } from '../models/geometry';
 
 type Repetition = 'repeat' | 'repeat-x' | 'repeat-y' | 'no-repeat';

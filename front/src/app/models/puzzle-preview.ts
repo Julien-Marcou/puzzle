@@ -1,7 +1,7 @@
 import { Canvas } from '../services/canvas';
-import { Edge } from './edge';
-import { Axis, Point, VALID_AXES } from './geometry';
+import { Axis, VALID_AXES } from './geometry';
 import { TabbedEdge } from './tabbed-edge';
+import type { Point } from './geometry';
 
 export class PuzzlePreview {
 
@@ -177,7 +177,7 @@ export class PuzzlePreview {
     this.middlePatternContext.clearRect(0, 0, this.middlePatternCanvas.width, this.middlePatternCanvas.height);
 
     const middle = Math.round(this.pieceSize / 2);
-    const edges: Record<Axis, Edge> = {
+    const edges: Record<Axis, TabbedEdge> = {
       [Axis.Horizontal]: new TabbedEdge(Axis.Horizontal, false),
       [Axis.Vertical]: new TabbedEdge(Axis.Vertical, false),
     };

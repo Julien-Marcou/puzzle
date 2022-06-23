@@ -1,10 +1,11 @@
 import { BaseTexture, MIPMAP_MODES, MSAA_QUALITY, SCALE_MODES, Spritesheet, Texture } from 'pixi.js';
 import { Canvas } from '../services/canvas';
-import { Edge } from './edge';
-import { Axis, Point } from './geometry';
+import { Axis } from './geometry';
 import { PieceShape } from './piece-shape';
 import { StraightEdge } from './straight-edge';
 import { TabbedEdge } from './tabbed-edge';
+import type { Edge } from './edge';
+import type { Point } from './geometry';
 import type { ISpritesheetData } from 'pixi.js';
 
 // Represent the top-left (included) and the bottom-right (excluded) coordinates of a quadrant.

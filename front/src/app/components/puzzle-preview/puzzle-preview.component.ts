@@ -1,10 +1,10 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
-import { AbortablePromise } from '../../models/abortable-promise';
 import { AXIS_TO_DIMENSION, VALID_AXES } from '../../models/geometry';
 import { PuzzleGame } from '../../models/puzzle-game';
 import { PuzzlePreview } from '../../models/puzzle-preview';
 import { PuzzleSpritesheet } from '../../models/puzzle-spritesheet';
 import { FileFetchError, FileReadError, ImageCreateError, ImageLoader } from '../../services/image-loader';
+import type { AbortablePromise } from '../../models/abortable-promise';
 import type { Point } from '../../models/geometry';
 
 class ImageTooBigError extends Error {

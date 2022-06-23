@@ -1,9 +1,9 @@
 import { Application, Container, Graphics, Text, LINE_JOIN } from 'pixi.js';
 import { environment } from '../../environments/environment';
 import { FpsGraph } from './fps-graph';
-import { Point } from './geometry';
 import { PieceSprite } from './piece-sprite';
-import { PuzzleSpritesheet } from './puzzle-spritesheet';
+import type { Point } from './geometry';
+import type { PuzzleSpritesheet } from './puzzle-spritesheet';
 import type { Renderer, InteractionManager, AccessibilityManager, TilingSpriteRenderer, Extract } from 'pixi.js';
 
 type PointerId = number;
