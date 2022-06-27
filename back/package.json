@@ -1,0 +1,38 @@
+{
+  "name": "puzzle-back",
+  "version": "0.0.0",
+  "scripts": {
+    "build": "npm run clean && npm run assets && esbuild src/index.ts --bundle --minify --platform=node --outfile=dist/puzzle/index.js",
+    "serve": "npm run clean && npm run assets && tsc-watch --onSuccess \"node ./dist/puzzle/index.js\" --noClear",
+    "lint": "eslint \"**/*.ts\"",
+    "clean": "rimraf dist/puzzle",
+    "assets": "copyfiles .env dist/puzzle"
+  },
+  "private": true,
+  "dependencies": {
+    "cookie": "^0.5.0",
+    "dotenv": "^16.0.1",
+    "inversify": "^6.0.1",
+    "reflect-metadata": "^0.1.13",
+    "rxjs": "^7.5.5",
+    "socket.io": "^4.5.1"
+  },
+  "devDependencies": {
+    "@types/cookie": "^0.5.1",
+    "@types/jest": "^28.1.3",
+    "@types/node": "^18.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.29.0",
+    "@typescript-eslint/parser": "^5.29.0",
+    "copyfiles": "^2.4.1",
+    "esbuild": "^0.14.47",
+    "eslint": "^8.18.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-jsdoc": "^39.3.3",
+    "eslint-plugin-prefer-arrow": "^1.2.3",
+    "jest": "^28.1.1",
+    "rimraf": "^3.0.2",
+    "ts-jest": "^28.0.5",
+    "tsc-watch": "^5.0.3",
+    "typescript": "^4.7.4"
+  }
+}
