@@ -1,9 +1,9 @@
-import { readFileSync, watch } from 'fs';
+import { readFileSync } from 'fs';
 import { createServer as createUnsecureServer, Server as UnsecureServer } from 'http';
 import { createServer as createSecureServer, Server as SecureServer } from 'https';
 import { inject, injectable } from 'inversify';
+import { FileWatcher } from './file-watcher';
 import type { SSLConfig } from '../env';
-import type { FSWatcher } from 'fs';
 import type { Duplex } from 'stream';
 import type { SecureContextOptions } from 'tls';
 
@@ -12,9 +12,10 @@ export class HttpServer {
 
   private static SSLUpdateDelay = 10000;
 
-  private server: SecureServer | UnsecureServer;
-  private sslFileWatchers?: ReadonlyArray<FSWatcher>;
+  public readonly server: SecureServer | UnsecureServer;
+
   private connections: Set<Duplex> = new Set();
+  private sslFileWatchers?: ReadonlyArray<FileWatcher>;
   private sslUpdateTimeout?: NodeJS.Timeout;
 
   constructor(
@@ -37,12 +38,12 @@ export class HttpServer {
   }
 
   public start(): void {
-    this.startWatchingSslCertificateFiles();
+    this.startWatchingSSLCertificateFiles();
     this.startListening();
   }
 
   public stop(closeAllConnections = false): void {
-    this.stopWatchingSslCertificateFiles();
+    this.stopWatchingSSLCertificateFiles();
     this.stopListening();
     if (closeAllConnections) {
       this.closeAllConnections();
@@ -86,21 +87,21 @@ export class HttpServer {
     });
   }
 
-  private startWatchingSslCertificateFiles(): void {
+  private startWatchingSSLCertificateFiles(): void {
     if (!this.sslConfig || !(this.server instanceof SecureServer) || this.sslFileWatchers) {
       return;
     }
     this.sslFileWatchers = [
-      watch(this.sslConfig.certificateFile, () => {
+      new FileWatcher(this.sslConfig.certificateFile, () => {
         this.scheduleSecureContextUpdate();
       }),
-      watch(this.sslConfig.privateKeyFile, () => {
+      new FileWatcher(this.sslConfig.privateKeyFile, () => {
         this.scheduleSecureContextUpdate();
       }),
     ];
   }
 
-  private stopWatchingSslCertificateFiles(): void {
+  private stopWatchingSSLCertificateFiles(): void {
     if (!this.sslFileWatchers) {
       return;
     }
@@ -133,10 +134,11 @@ export class HttpServer {
     }
     try {
       this.server.setSecureContext(this.getSecureContext());
+      console.log(`Secure Context has been updated (${this.getCurrentDateTime()})`);
     }
     catch (error) {
       console.error(error);
-      console.log('Could not update Secure Context for HTTPS Server, keeping old context');
+      console.log(`Could not update Secure Context for HTTPS Server, keeping old context (${this.getCurrentDateTime()})`);
     }
   }
 

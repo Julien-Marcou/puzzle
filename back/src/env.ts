@@ -10,9 +10,8 @@ export type SSLConfig = {
 
 export class Env {
 
-  public readonly container: Container;
-
   private readonly envFile = `${__dirname}/.env`;
+  private readonly container: Container;
 
   constructor() {
     config({ path: this.envFile });
