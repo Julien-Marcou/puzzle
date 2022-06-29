@@ -343,7 +343,7 @@ export class PuzzleGame {
     return result;
   }
 
-  private addGameEventListeners():  void {
+  private addGameEventListeners(): void {
     const handlePieceHovering = (event: PointerEvent): void => {
       const previousCanInteract = this.canInteract;
       const canvasPosition = this.getCanvasPosition(event);
