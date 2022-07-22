@@ -53,54 +53,6 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
     grid-gap: 1rem;
-
-    .thumbnail {
-      cursor: pointer;
-      position: relative;
-      padding: 0.5rem;
-      border: 2px solid #eee;
-      background-color: transparent;
-      border-radius: 5px;
-      overflow: hidden;
-
-      .thumbnail-image {
-        pointer-events: none;
-        display: block;
-        width: 100%;
-        aspect-ratio: 1 / 1;
-        border-radius: 3px;
-        object-fit: cover;
-        user-select: none;
-        -webkit-user-select: none;
-      }
-
-      .thumbnail-marker {
-        pointer-events: none;
-        position: absolute;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        top: 0;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background-color: rgba(255, 255, 255, 0.6);
-      }
-
-      &.active, &.loading {
-        .thumbnail-marker {
-          display: grid;
-        }
-      }
-
-      &:hover, &:focus-visible {
-        border-color: #666;
-      }
-
-      &[disabled] {
-        cursor: default;
-      }
-    }
   }
 }
 
