@@ -1,8 +1,11 @@
 import { Sprite } from 'pixi.js';
 import type { Point } from '../models/geometry';
+import type { PieceGroup } from './piece-group';
 import type { Texture } from 'pixi.js';
 
 export class PieceSprite extends Sprite {
+
+  declare public parent: PieceGroup;
 
   private readonly transparentThreshold = 80;
 
