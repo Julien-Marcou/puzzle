@@ -93,31 +93,31 @@
     </button>
   </div>
 
-  <button type="button" class="image-error" [class.display]="imageError === 'unknown'" (click)="clearImageError()">
+  <button type="button" class="popup-error" [class.display]="imageError === 'unknown'" (click)="clearImageError()">
     Une erreur inattendue s'est produite.
   </button>
 
-  <button type="button" class="image-error" [class.display]="imageError === 'too-heavy'" (click)="clearImageError()">
+  <button type="button" class="popup-error" [class.display]="imageError === 'too-heavy'" (click)="clearImageError()">
     L'image choisie est trop lourde. Elle doit faire au maximum {{ maxFileSize }}Mo.
   </button>
 
-  <button type="button" class="image-error" [class.display]="imageError === 'too-small'" (click)="clearImageError()">
+  <button type="button" class="popup-error" [class.display]="imageError === 'too-small'" (click)="clearImageError()">
     L'image choisie est trop petite. Elle doit faire au minimum {{ minPuzzleImageWidth }} par {{ minPuzzleImageHeight }} pixels.
   </button>
 
-  <button type="button" class="image-error" [class.display]="imageError === 'too-big'" (click)="clearImageError()">
+  <button type="button" class="popup-error" [class.display]="imageError === 'too-big'" (click)="clearImageError()">
     L'image choisie est trop grande. Elle doit faire au maximum {{ maxPuzzleImageWidth }} par {{ maxPuzzleImageHeight }} pixels.
   </button>
 
-  <button type="button" class="image-error" [class.display]="imageError === 'file-read'" (click)="clearImageError()">
+  <button type="button" class="popup-error" [class.display]="imageError === 'file-read'" (click)="clearImageError()">
     Une erreur est survenue pendant le lecture de l'image.
   </button>
 
-  <button type="button" class="image-error" [class.display]="imageError === 'file-fetch'" (click)="clearImageError()">
+  <button type="button" class="popup-error" [class.display]="imageError === 'file-fetch'" (click)="clearImageError()">
     Une erreur est survenue pendant le téléchargement de l'image.
   </button>
 
-  <button type="button" class="image-error" [class.display]="imageError === 'image-create'" (click)="clearImageError()">
+  <button type="button" class="popup-error" [class.display]="imageError === 'image-create'" (click)="clearImageError()">
     Une erreur est survenue pendant le chargement de l'image.
   </button>
 

@@ -30,3 +30,27 @@ button {
     cursor: move;
   }
 }
+
+.popup-error {
+  pointer-events: none;
+  position: fixed;
+  top: 1rem;
+  left: 50%;
+  max-width: 500px;
+  width: calc(100% - 4rem);
+  padding: 1rem;
+  transform: translateX(-50%);
+  background-color: #fff6f6;
+  color: #f80000;
+  box-shadow: 0 3px 5px 3px rgba(160, 0, 0, 0.2);
+  text-align: center;
+  transition: all 0.2s ease-in-out;
+  transform: translate(-50%, calc(-100% - 2rem));
+  opacity: 0;
+
+  &.display {
+    pointer-events: all;
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
