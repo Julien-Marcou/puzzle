@@ -64,7 +64,7 @@ export class PuzzleGame {
   private readonly application: Application;
   private readonly border: Graphics;
   private readonly viewportContainer: Container;
-  private readonly pieceContainer: Container;
+  private readonly pieceContainer: Container<PieceGroup>;
   private readonly resizeObserver: ResizeObserver;
   private readonly canvasOrigin: Point;
 
@@ -191,7 +191,7 @@ export class PuzzleGame {
 
   public debug(message?: string | unknown): void {
     this.wrapper.innerHTML =`<p>${message}<p>`;
-    const renderer =(this.application.renderer as Renderer);
+    const renderer = (this.application.renderer as Renderer);
     const webglVersion = renderer.context.webGLVersion;
     const maxTextureSize = renderer.gl.getParameter(renderer.gl.MAX_TEXTURE_SIZE);
     const maxViewportDims = renderer.gl.getParameter(renderer.gl.MAX_VIEWPORT_DIMS);
@@ -697,7 +697,7 @@ export class PuzzleGame {
 
   private getPieceGroupAt(point: Point): PieceGroup | undefined {
     for (let i = this.pieceContainer.children.length - 1; i >= 0; i--) {
-      const pieceGroup = this.pieceContainer.children[i] as PieceGroup;
+      const pieceGroup = this.pieceContainer.children[i];
       if (pieceGroup.hitBy(point)) {
         return pieceGroup;
       }
@@ -706,7 +706,7 @@ export class PuzzleGame {
   }
 
   private getPieceGroupLockPosition(pieceGroup: PieceGroup): Point | undefined {
-    const piece = pieceGroup.children[0] as PieceSprite;
+    const piece = pieceGroup.children[0];
     const validX = (piece.cell.x * this.pieceSize) - this.spritesheet.pieceMargin;
     const validY = (piece.cell.y * this.pieceSize) - this.spritesheet.pieceMargin;
     if (Math.abs(pieceGroup.x - validX) < this.pieceSnappingMargin && Math.abs(pieceGroup.y - validY) < this.pieceSnappingMargin) {
@@ -716,7 +716,7 @@ export class PuzzleGame {
   }
 
   private getPieceGroupSnapping(pieceGroup: PieceGroup): GroupSnapping | undefined {
-    const pieces = pieceGroup.children as Array<PieceSprite>;
+    const pieces = pieceGroup.children;
     const neighborOffsets = [
       {x: -1, y: 0},
       {x: 1, y: 0},
@@ -731,7 +731,7 @@ export class PuzzleGame {
           const validY = neighborPiece.parent.y + neighborPiece.y - (this.pieceSize * neighborOffset.y) - piece.y;
           if (Math.abs(pieceGroup.x - validX) < this.pieceSnappingMargin && Math.abs(pieceGroup.y - validY) < this.pieceSnappingMargin) {
             return {
-              pieceGroup: neighborPiece.parent as PieceGroup,
+              pieceGroup: neighborPiece.parent,
               snapPosition: {x: validX, y: validY},
             };
           }
@@ -742,7 +742,7 @@ export class PuzzleGame {
   }
 
   private checkIfPuzzleIsFinished(): boolean {
-    if (!this.pieceContainer.children.every((pieceGroup) => (pieceGroup as PieceGroup).isLocked())) {
+    if (!this.pieceContainer.children.every((pieceGroup) => pieceGroup.isLocked())) {
       return false;
     }
     const finishedText = new Text('GG', {
@@ -760,7 +760,7 @@ export class PuzzleGame {
   }
 
   private shufflePieces(): void {
-    const remainingPieces = [...this.pieceContainer.children as Array<PieceGroup>];
+    const remainingPieces = [...this.pieceContainer.children];
     const horizontalSpriteCount = Math.floor(this.puzzleWidth / this.spritesheet.pieceSpriteSize);
     const verticalSpriteCount = Math.floor(this.puzzleHeight / this.spritesheet.pieceSpriteSize);
     const cellWidth = this.puzzleWidth / horizontalSpriteCount;

@@ -3,7 +3,7 @@ import { Container } from 'pixi.js';
 import type { Point } from '../models/geometry';
 import type { PieceSprite } from './piece-sprite';
 
-export class PieceGroup extends Container {
+export class PieceGroup extends Container<PieceSprite> {
 
   private locked = false;
 
@@ -15,7 +15,7 @@ export class PieceGroup extends Container {
       x: point.x - this.x,
       y: point.y - this.y,
     };
-    for (const pieceSprite of (this.children as Array<PieceSprite>)) {
+    for (const pieceSprite of this.children) {
       if (pieceSprite.isPointInBoundingBox(relativePoint) && !pieceSprite.isPixelTransparentAt(relativePoint)) {
         return true;
       }
