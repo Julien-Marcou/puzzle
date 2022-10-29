@@ -1,5 +1,8 @@
-import { Container, Sprite, Text, Texture } from 'pixi.js';
-import type { Ticker } from 'pixi.js';
+import { Texture } from '@pixi/core';
+import { Container } from '@pixi/display';
+import { Sprite } from '@pixi/sprite';
+import { Text } from '@pixi/text';
+import type { Ticker } from '@pixi/core';
 
 export class FpsGraph extends Container {
 

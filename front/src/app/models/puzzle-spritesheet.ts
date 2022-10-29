@@ -1,4 +1,5 @@
-import { BaseTexture, MIPMAP_MODES, MSAA_QUALITY, SCALE_MODES, Spritesheet, Texture } from 'pixi.js';
+import { BaseTexture, MIPMAP_MODES, MSAA_QUALITY, SCALE_MODES, Texture } from '@pixi/core';
+import { Spritesheet } from '@pixi/spritesheet';
 import { Canvas } from '../services/canvas';
 import { Axis } from './geometry';
 import { PieceShape } from './piece-shape';
@@ -6,7 +7,7 @@ import { StraightEdge } from './straight-edge';
 import { TabbedEdge } from './tabbed-edge';
 import type { Edge } from './edge';
 import type { Point } from './geometry';
-import type { ISpritesheetData } from 'pixi.js';
+import type { ISpritesheetData } from '@pixi/spritesheet';
 
 // Represent the top-left (included) and the bottom-right (excluded) coordinates of a quadrant.
 // This is used to split the original spritesheet in 4 spritesheets
@@ -146,23 +147,16 @@ export class PuzzleSpritesheet {
 
   private async populateSpritesheetTexturesFromQuadrant(textures: Array<Array<Texture>>, quadrant: Quadrant): Promise<void> {
     const quandrantSpritesheet = await this.getSpritesheetFromQuadrant(quadrant);
-    await new Promise<void>((resolve) => {
-      quandrantSpritesheet.parse((quandantTextures) => {
-        if (!quandantTextures) {
-          throw new Error('Unable to parse spritesheet quadrant');
+    const quandantTextures = await quandrantSpritesheet.parse();
+    for (let x = quadrant.start.x; x < quadrant.end.x; x++) {
+      for (let y = quadrant.start.y; y < quadrant.end.y; y++) {
+        const texture = quandantTextures[`${x}_${y}`];
+        if (!texture) {
+          throw new Error('Unable to retrieve piece texture');
         }
-        for (let x = quadrant.start.x; x < quadrant.end.x; x++) {
-          for (let y = quadrant.start.y; y < quadrant.end.y; y++) {
-            const texture = quandantTextures[`${x}_${y}`];
-            if (!texture) {
-              throw new Error('Unable to retrieve piece texture');
-            }
-            textures[x][y] = texture;
-          }
-        }
-        resolve();
-      });
-    });
+        textures[x][y] = texture;
+      }
+    }
   }
 
   private async getSpritesheetFromQuadrant(quadrant: Quadrant): Promise<Spritesheet> {

@@ -1,5 +1,5 @@
+import { Container } from '@pixi/display';
 import { OutlineFilter } from '@pixi/filter-outline';
-import { Container } from 'pixi.js';
 import type { Point } from '../models/geometry';
 import type { PieceSprite } from './piece-sprite';
 

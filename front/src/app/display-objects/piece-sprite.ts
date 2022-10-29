@@ -1,7 +1,7 @@
-import { Sprite } from 'pixi.js';
+import { Sprite } from '@pixi/sprite';
 import type { Point } from '../models/geometry';
 import type { PieceGroup } from './piece-group';
-import type { Texture } from 'pixi.js';
+import type { Texture } from '@pixi/core';
 
 export class PieceSprite extends Sprite {
 

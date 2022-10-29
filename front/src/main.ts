@@ -1,11 +1,10 @@
 import { enableProdMode, ViewEncapsulation } from '@angular/core';
 import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+import { settings, ENV, SCALE_MODES } from '@pixi/core';
 // import * as PIXI from 'pixi.js';
-import { utils, settings, ENV, SCALE_MODES } from 'pixi.js';
 import { AppModule } from './app/app.module';
 import { environment } from './environments/environment';
 
-utils.skipHello();
 settings.RESOLUTION = Math.max(1, window.devicePixelRatio);
 settings.RENDER_OPTIONS.autoDensity = true;
 settings.PREFER_ENV = ENV.WEBGL2;

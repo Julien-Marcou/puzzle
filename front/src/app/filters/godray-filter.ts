@@ -1,11 +1,8 @@
 /* eslint-disable @typescript-eslint/member-ordering */
-import { Filter } from '@pixi/core';
-import { Point, DEG_TO_RAD } from '@pixi/math';
+import { Filter, Point, DEG_TO_RAD } from '@pixi/core';
 import { vertex } from './default-vertex';
 import { godray } from './godray-fragment';
-import type { CLEAR_MODES } from '@pixi/constants';
-import type { FilterSystem, RenderTexture } from '@pixi/core';
-import type { Rectangle } from '@pixi/math';
+import type { CLEAR_MODES, FilterSystem, RenderTexture, Rectangle } from '@pixi/core';
 
 interface GodrayFilterOptions {
   angle: number;

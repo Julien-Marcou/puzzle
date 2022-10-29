@@ -1,11 +1,14 @@
-import { Application, Container, Graphics, Text, LINE_JOIN } from 'pixi.js';
+import { Application } from '@pixi/app';
+import { Container } from '@pixi/display';
+import { Graphics, LINE_JOIN } from '@pixi/graphics';
+import { Text } from '@pixi/text';
 import { environment } from '../../environments/environment';
 import { FpsGraph } from '../display-objects/fps-graph';
 import { PieceGroup } from '../display-objects/piece-group';
 import { PieceSprite } from '../display-objects/piece-sprite';
 import type { Point } from './geometry';
 import type { PuzzleSpritesheet } from './puzzle-spritesheet';
-import type { Renderer, InteractionManager, AccessibilityManager, TilingSpriteRenderer, Extract } from 'pixi.js';
+import type { Renderer } from '@pixi/core';
 
 type GroupSnapping = {
   pieceGroup: PieceGroup;
@@ -106,7 +109,7 @@ export class PuzzleGame {
       y: this.canvas.offsetTop,
     };
 
-    this.pieceContainer = new Container();
+    this.pieceContainer = new Container<PieceGroup>();
     this.pieceContainer.x = this.puzzleOrigin.x;
     this.pieceContainer.y = this.puzzleOrigin.y;
 
@@ -132,11 +135,6 @@ export class PuzzleGame {
       backgroundColor: this.gameBackgroundColor,
       autoStart: false,
     });
-    (this.application.renderer.plugins['accessibility'] as AccessibilityManager).destroy();
-    (this.application.renderer.plugins['tilingSprite'] as TilingSpriteRenderer).destroy();
-    (this.application.renderer.plugins['extract'] as Extract).destroy();
-    (this.application.renderer.plugins['interaction'] as InteractionManager).destroy();
-    this.application.stage.interactiveChildren = false;
     this.application.stage.addChild(this.viewportContainer);
 
     if (!environment.production) {
