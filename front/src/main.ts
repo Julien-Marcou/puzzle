@@ -1,4 +1,4 @@
-import { enableProdMode, ViewEncapsulation } from '@angular/core';
+import { enableProdMode } from '@angular/core';
 import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 import { settings, ENV, SCALE_MODES } from '@pixi/core';
 // import * as PIXI from 'pixi.js';
@@ -17,6 +17,5 @@ if (environment.production) {
   enableProdMode();
 }
 
-platformBrowserDynamic().bootstrapModule(AppModule, {
-  defaultEncapsulation: ViewEncapsulation.ShadowDom,
-}).catch((err) => console.error(err));
+platformBrowserDynamic().bootstrapModule(AppModule)
+  .catch((err) => console.error(err));
