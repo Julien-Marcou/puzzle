@@ -497,6 +497,10 @@ export class PuzzleGame {
       this.viewportContainer.y -= offsetVector.y;
     };
 
+    const isPointerCaptured = (event: PointerEvent): boolean => this.capturedPointers.has(event.pointerId);
+
+    const isLeftOrMiddleClick = (event: PointerEvent): boolean => event.button === 0 || event.button === 1;
+
     const capturePointerEvent = (event: PointerEvent): void => {
       this.canvas.setPointerCapture(event.pointerId);
       const pointerPosition = this.getCanvasPosition(event);
@@ -617,6 +621,9 @@ export class PuzzleGame {
     };
 
     this.canvas.addEventListener('pointerdown', (event) => {
+      if (!isLeftOrMiddleClick(event)) {
+        return;
+      }
       capturePointerEvent(event);
       if (this.viewportState === ViewportState.Idle) {
         handlePieceHovering(event);
@@ -636,6 +643,9 @@ export class PuzzleGame {
     });
 
     this.canvas.addEventListener('pointerup', (event) => {
+      if (!isPointerCaptured(event)) {
+        return;
+      }
       releasePointerEvent(event);
       if (this.viewportState === ViewportState.Interaction) {
         stopPieceDragging();
@@ -689,6 +699,9 @@ export class PuzzleGame {
     });
 
     this.canvas.addEventListener('wheel', (event: WheelEvent) => {
+      if (this.viewportState === ViewportState.Manipulation) {
+        return;
+      }
       viewportWheelZoom(event);
     });
   }
