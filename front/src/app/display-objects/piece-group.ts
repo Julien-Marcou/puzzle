@@ -1,7 +1,7 @@
 import { Container } from '@pixi/display';
 import { OutlineFilter } from '@pixi/filter-outline';
-import type { Point } from '../models/geometry';
 import type { PieceSprite } from './piece-sprite';
+import type { Point } from '../models/geometry';
 
 export class PieceGroup extends Container<PieceSprite> {
 
