@@ -6,6 +6,7 @@ import { AppModule } from './app/app.module';
 import { environment } from './environments/environment';
 
 settings.RESOLUTION = Math.max(1, window.devicePixelRatio);
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 settings.RENDER_OPTIONS!.autoDensity = true;
 settings.PREFER_ENV = ENV.WEBGL2;
 settings.FILTER_RESOLUTION = settings.RESOLUTION;
