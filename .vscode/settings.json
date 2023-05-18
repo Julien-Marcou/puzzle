@@ -1,6 +1,5 @@
 {
   "typescript.preferences.quoteStyle": "single",
-  "javascript.preferences.quoteStyle": "single",
   "eslint.workingDirectories": [
     "back",
     "front"
