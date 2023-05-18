@@ -3,7 +3,7 @@ import { settings } from '@pixi/core';
 import { Container } from '@pixi/display';
 import { Graphics, LINE_JOIN } from '@pixi/graphics';
 import { Text } from '@pixi/text';
-import { environment } from '../../environments/environment';
+import { environment } from '../../environments/environment.development';
 import { FpsGraph } from '../display-objects/fps-graph';
 import { PieceGroup } from '../display-objects/piece-group';
 import { PieceSprite } from '../display-objects/piece-sprite';
@@ -141,7 +141,7 @@ export class PuzzleGame {
     });
     this.application.stage.addChild(this.viewportContainer);
 
-    if (!environment.production) {
+    if (environment.showFpsGraph) {
       const fpsGraph = new FpsGraph(this.application.ticker);
       fpsGraph.x = 10;
       fpsGraph.y = 10;
