@@ -142,6 +142,16 @@
             "leadingUnderscore": "allow"
           },
           {
+            "selector": [
+              "typeProperty",
+              "objectLiteralProperty"
+            ],
+            "modifiers": [
+              "requiresQuotes"
+            ],
+            "format": null
+          },
+          {
             "selector": "variable",
             "modifiers": [
               "const"
