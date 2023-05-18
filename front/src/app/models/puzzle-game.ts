@@ -6,6 +6,7 @@ import { environment } from '../../environments/environment';
 import { FpsGraph } from '../display-objects/fps-graph';
 import { PieceGroup } from '../display-objects/piece-group';
 import { PieceSprite } from '../display-objects/piece-sprite';
+import { settings } from '@pixi/core';
 import type { Point } from './geometry';
 import type { PuzzleSpritesheet } from './puzzle-spritesheet';
 import type { Renderer } from '@pixi/core';
@@ -134,6 +135,8 @@ export class PuzzleGame {
       height: this.wrapper.clientHeight,
       backgroundColor: this.gameBackgroundColor,
       autoStart: false,
+      resolution: settings.RESOLUTION,
+      autoDensity: settings.RENDER_OPTIONS!.autoDensity,
     });
     this.application.stage.addChild(this.viewportContainer);
 
