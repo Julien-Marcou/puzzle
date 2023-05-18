@@ -2,15 +2,22 @@
   "root": true,
   "overrides": [
     {
-      "files": ["*.ts"],
+      "files": [
+        "*.ts"
+      ],
       "parser": "@typescript-eslint/parser",
       "parserOptions": {
-        "project": ["tsconfig.json"]
+        "project": [
+          "tsconfig.json"
+        ]
       },
       "settings": {
         "import/resolver": {
           "node": {
-            "extensions": [".ts", ".mjs"]
+            "extensions": [
+              ".ts",
+              ".mjs"
+            ]
           }
         }
       },
@@ -35,7 +42,16 @@
         "import/order": [
           "warn",
           {
-            "groups": ["builtin", "external", "internal", "parent", "sibling", "index", "object", "type"],
+            "groups": [
+              "builtin",
+              "external",
+              "internal",
+              "parent",
+              "sibling",
+              "index",
+              "object",
+              "type"
+            ],
             "newlines-between": "never",
             "alphabetize": {
               "order": "asc"
@@ -49,14 +65,20 @@
           }
         ],
         "no-unused-vars": "off",
-        "object-shorthand": ["warn", "never"],
+        "object-shorthand": [
+          "warn",
+          "never"
+        ],
         "quotes": "off",
         "semi": "off",
         "space-before-function-paren": "off",
         "@angular-eslint/component-class-suffix": [
           "error",
           {
-            "suffixes": ["Page", "Component"]
+            "suffixes": [
+              "Page",
+              "Component"
+            ]
           }
         ],
         "@angular-eslint/component-selector": [
@@ -81,8 +103,14 @@
             "default": "generic"
           }
         ],
-        "@typescript-eslint/brace-style": ["warn", "stroustrup"],
-        "@typescript-eslint/comma-dangle": ["warn", "always-multiline"],
+        "@typescript-eslint/brace-style": [
+          "warn",
+          "stroustrup"
+        ],
+        "@typescript-eslint/comma-dangle": [
+          "warn",
+          "always-multiline"
+        ],
         "@typescript-eslint/dot-notation": [
           "warn",
           {
@@ -109,26 +137,51 @@
           "warn",
           {
             "selector": "default",
-            "format": ["camelCase", "snake_case", "PascalCase"],
+            "format": [
+              "camelCase",
+              "snake_case",
+              "PascalCase"
+            ],
             "leadingUnderscore": "allow"
           },
           {
             "selector": "variable",
-            "modifiers": ["const"],
-            "format": ["UPPER_CASE", "camelCase"]
+            "modifiers": [
+              "const"
+            ],
+            "format": [
+              "UPPER_CASE",
+              "camelCase"
+            ]
           },
           {
-            "selector": ["variableLike", "memberLike", "property", "method"],
-            "format": ["camelCase"]
+            "selector": [
+              "variableLike",
+              "memberLike",
+              "property",
+              "method"
+            ],
+            "format": [
+              "camelCase"
+            ]
           },
           {
-            "selector": ["typeLike", "enumMember"],
-            "format": ["PascalCase"]
+            "selector": [
+              "typeLike",
+              "enumMember"
+            ],
+            "format": [
+              "PascalCase"
+            ]
           },
           {
             "selector": "property",
-            "modifiers": ["static"],
-            "format": ["PascalCase"]
+            "modifiers": [
+              "static"
+            ],
+            "format": [
+              "PascalCase"
+            ]
           }
         ],
         "@typescript-eslint/no-explicit-any": "warn",
@@ -139,8 +192,14 @@
           }
         ],
         "@typescript-eslint/no-unused-vars": "warn",
-        "@typescript-eslint/quotes": ["error", "single"],
-        "@typescript-eslint/semi": ["error", "always"],
+        "@typescript-eslint/quotes": [
+          "error",
+          "single"
+        ],
+        "@typescript-eslint/semi": [
+          "error",
+          "always"
+        ],
         "@typescript-eslint/space-before-function-paren": [
           "warn",
           {
@@ -153,8 +212,12 @@
       }
     },
     {
-      "files": ["*.html"],
-      "extends": ["plugin:@angular-eslint/template/recommended"],
+      "files": [
+        "*.html"
+      ],
+      "extends": [
+        "plugin:@angular-eslint/template/recommended"
+      ],
       "rules": {}
     }
   ]
