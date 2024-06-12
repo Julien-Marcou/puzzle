@@ -1,10 +1,10 @@
 import { Component, ElementRef, Input, ViewChild } from '@angular/core';
 
 @Component({
-    selector: 'app-checkmark-spinner',
-    templateUrl: './checkmark-spinner.component.html',
-    styleUrls: ['./checkmark-spinner.component.scss'],
-    standalone: true,
+  selector: 'app-checkmark-spinner',
+  templateUrl: './checkmark-spinner.component.html',
+  styleUrls: ['./checkmark-spinner.component.scss'],
+  standalone: true,
 })
 export class CheckmarkSpinnerComponent {
 

@@ -1,5 +1,5 @@
 import { AbstractRenderer, Application, Container, Graphics, Text, WebGLRenderer } from 'pixi.js';
-import { environment } from '../../environments/environment.development';
+import { environment } from '../../environments/environment';
 import { FpsGraph } from '../display-objects/fps-graph';
 import { PieceGroup } from '../display-objects/piece-group';
 import { PieceSprite } from '../display-objects/piece-sprite';
