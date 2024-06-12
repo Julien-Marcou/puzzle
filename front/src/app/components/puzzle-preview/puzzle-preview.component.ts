@@ -38,8 +38,8 @@ export class PuzzlePreviewComponent implements OnInit {
   @ViewChild('puzzlePreview', {static: true}) private puzzlePreviewRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('puzzleGameWrapper', {static: true}) private puzzleGameWrapperRef!: ElementRef<HTMLCanvasElement>;
 
-  public readonly puzzleImageFolder = '/assets/puzzles';
-  public readonly puzzleThumbnailFolder = '/assets/puzzle-thumbnails';
+  public readonly puzzleImageFolder = '/img/puzzles';
+  public readonly puzzleThumbnailFolder = '/img/puzzle-thumbnails';
   public readonly puzzles = [
     'the-great-wave-off-kanagawa.jpg',
     'mandalas-by-viscious-speed.jpg',
