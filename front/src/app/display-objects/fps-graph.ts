@@ -1,8 +1,5 @@
-import { Texture } from '@pixi/core';
-import { Container } from '@pixi/display';
-import { Sprite } from '@pixi/sprite';
-import { Text } from '@pixi/text';
-import type { Ticker } from '@pixi/core';
+import { Texture, Container, Sprite, Text } from 'pixi.js';
+import type { Ticker } from 'pixi.js';
 
 export class FpsGraph extends Container {
 
@@ -67,18 +64,24 @@ export class FpsGraph extends Container {
   }
 
   private buildFpsLabel(): Text {
-    return new Text('0 fps', {
-      fill: 0xffffff,
-      stroke: 0x000000,
-      strokeThickness: 1,
-      dropShadow: true,
-      dropShadowAngle: Math.PI / 2,
-      dropShadowDistance: 0,
-      dropShadowColor: 0x000000,
-      dropShadowBlur: 3,
-      dropShadowAlpha: 0.5,
-      fontSize: this.fontSize,
-      fontFamily: 'sans-serif',
+    return new Text({
+      text: '0 fps',
+      style: {
+        fill: 0xffffff,
+        stroke: {
+          color: 0x000000,
+          width: 1,
+        },
+        dropShadow: {
+          alpha: 0.5,
+          angle: Math.PI / 2,
+          blur: 3,
+          color: 0x000000,
+          distance: 0,
+        },
+        fontSize: this.fontSize,
+        fontFamily: 'sans-serif',
+      },
     });
   }
 

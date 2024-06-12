@@ -1,5 +1,4 @@
-import { BaseTexture, MIPMAP_MODES, MSAA_QUALITY, SCALE_MODES, Texture } from '@pixi/core';
-import { Spritesheet } from '@pixi/spritesheet';
+import { Texture, Spritesheet } from 'pixi.js';
 import { Canvas } from '../services/canvas';
 import { Axis } from './geometry';
 import { PieceShape } from './piece-shape';
@@ -7,7 +6,7 @@ import { StraightEdge } from './straight-edge';
 import { TabbedEdge } from './tabbed-edge';
 import type { Edge } from './edge';
 import type { Point } from './geometry';
-import type { ISpritesheetData } from '@pixi/spritesheet';
+import type { SpritesheetData } from 'pixi.js';
 
 // Represent the top-left (included) and the bottom-right (excluded) coordinates of a quadrant.
 // This is used to split the original spritesheet in 4 spritesheets
@@ -23,12 +22,6 @@ export class PuzzleSpritesheet {
 
   private readonly pieceStrokeColor = '#fff';
   private readonly pieceStrokeThickness = 1;
-  private readonly textureSettings = {
-    mipmap: MIPMAP_MODES.ON,
-    scaleMode: SCALE_MODES.LINEAR,
-    multisample: MSAA_QUALITY.HIGH,
-    resolution: 1,
-  };
 
   private readonly canvas: HTMLCanvasElement;
   private readonly context: CanvasRenderingContext2D;
@@ -105,23 +98,6 @@ export class PuzzleSpritesheet {
     this.spritesheets = [];
   }
 
-  // public setScaleModeToNearest(): void {
-  //   this.setScaleMode(SCALE_MODES.NEAREST);
-  // }
-
-  // public setScaleModeToLinear(): void {
-  //   this.setScaleMode(SCALE_MODES.LINEAR);
-  // }
-
-  private setScaleMode(scaleMode: SCALE_MODES): void {
-    this.spritesheets.forEach((spritesheet) => {
-      if (spritesheet.baseTexture.scaleMode !== scaleMode) {
-        spritesheet.baseTexture.scaleMode = scaleMode;
-        spritesheet.baseTexture.update();
-      }
-    });
-  }
-
   private populateSpritesheetAlphaChannels(alphaChannels: Array<Array<Array<Uint8ClampedArray>>>): void {
     const bytePerPixel = 4;
     const alphaChannelOffset = 3;
@@ -161,7 +137,12 @@ export class PuzzleSpritesheet {
 
   private async getSpritesheetFromQuadrant(quadrant: Quadrant): Promise<Spritesheet> {
     const spritesheetImage = await this.getSpritesheetImageFromQuadrant(quadrant);
-    const spritesheetTexture = new BaseTexture(spritesheetImage, this.textureSettings);
+    const spritesheetTexture = Texture.from(spritesheetImage);
+    spritesheetTexture.source.resolution = 1;
+    spritesheetTexture.source.scaleMode = 'linear';
+    // spritesheetTexture.source.antialias = true;
+    // spritesheetTexture.source.sampleCount = MSAA_QUALITY.HIGH;
+    spritesheetTexture.source.autoGenerateMipmaps = true;
     const spritesheetData = this.getSpritesheetDataFromQuadrant(quadrant);
     const spritesheet = new Spritesheet(spritesheetTexture, spritesheetData);
     this.spritesheets.push(spritesheet);
@@ -178,8 +159,8 @@ export class PuzzleSpritesheet {
     );
   }
 
-  private getSpritesheetDataFromQuadrant(quadrant: Quadrant): ISpritesheetData {
-    const spritesheetData: ISpritesheetData = {
+  private getSpritesheetDataFromQuadrant(quadrant: Quadrant): SpritesheetData {
+    const spritesheetData: SpritesheetData = {
       frames: {},
       meta: {
         scale: '1',

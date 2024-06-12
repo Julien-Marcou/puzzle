@@ -1,15 +1,10 @@
-import { Application } from '@pixi/app';
-import { settings } from '@pixi/core';
-import { Container } from '@pixi/display';
-import { Graphics, LINE_JOIN } from '@pixi/graphics';
-import { Text } from '@pixi/text';
+import { AbstractRenderer, Application, Container, Graphics, Text, WebGLRenderer } from 'pixi.js';
 import { environment } from '../../environments/environment.development';
 import { FpsGraph } from '../display-objects/fps-graph';
 import { PieceGroup } from '../display-objects/piece-group';
 import { PieceSprite } from '../display-objects/piece-sprite';
 import type { Point } from './geometry';
 import type { PuzzleSpritesheet } from './puzzle-spritesheet';
-import type { Renderer } from '@pixi/core';
 
 type GroupSnapping = {
   pieceGroup: PieceGroup;
@@ -110,16 +105,16 @@ export class PuzzleGame {
       y: this.canvas.offsetTop,
     };
 
-    this.pieceContainer = new Container<PieceGroup>();
+    this.pieceContainer = new Container();
+    this.pieceContainer.interactive = false;
+    this.pieceContainer.interactiveChildren = false;
     this.pieceContainer.x = this.puzzleOrigin.x;
     this.pieceContainer.y = this.puzzleOrigin.y;
 
     const puzzleArea = new Graphics();
     puzzleArea.x = this.puzzleOrigin.x;
     puzzleArea.y = this.puzzleOrigin.y;
-    puzzleArea.beginFill(this.puzzleBackgroundColor);
-    puzzleArea.drawRect(0, 0, this.puzzleWidth, this.puzzleHeight);
-    puzzleArea.endFill();
+    puzzleArea.rect(0, 0, this.puzzleWidth, this.puzzleHeight).fill(this.puzzleBackgroundColor);
 
     this.border = new Graphics();
 
@@ -129,15 +124,23 @@ export class PuzzleGame {
     this.viewportContainer.addChild(this.pieceContainer);
     this.viewportContainer.visible = false;
 
-    this.application = new Application({
-      view: this.canvas,
+    this.application = new Application();
+    this.resizeObserver = new ResizeObserver(() => {
+      this.resize();
+    });
+    this.init();
+  }
+
+  public async init(): Promise<void> {
+    await this.application.init({
+      canvas: this.canvas,
       width: this.wrapper.clientWidth,
       height: this.wrapper.clientHeight,
       backgroundColor: this.gameBackgroundColor,
       autoStart: false,
-      resolution: settings.RESOLUTION,
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      autoDensity: settings.RENDER_OPTIONS!.autoDensity,
+      resolution: AbstractRenderer.defaultOptions.resolution,
+      autoDensity: true,
+      manageImports: false,
     });
     this.application.stage.addChild(this.viewportContainer);
 
@@ -148,12 +151,8 @@ export class PuzzleGame {
       this.application.stage.addChild(fpsGraph);
     }
 
-    this.resizeObserver = new ResizeObserver(() => {
-      this.resize();
-    });
     try {
       this.resizeObserver.observe(this.wrapper);
-      this.resize();
       this.addGameEventListeners();
       this.start();
     }
@@ -163,13 +162,18 @@ export class PuzzleGame {
   }
 
   public start(): void {
-    const loadingText = new Text('Chargement...', {
-      fill: 0xffffff,
-      stroke: 0x000000,
-      strokeThickness: 4,
-      lineJoin: LINE_JOIN.BEVEL,
-      fontSize: 42,
-      fontFamily: 'sans-serif',
+    const loadingText = new Text({
+      text: 'Chargement...',
+      style: {
+        fill: 0xffffff,
+        stroke: {
+          color: 0x000000,
+          width: 4,
+          join: 'bevel',
+        },
+        fontSize: 42,
+        fontFamily: 'sans-serif',
+      },
     });
     loadingText.x = Math.round((this.canvas.clientWidth - loadingText.width) / 2);
     loadingText.y = Math.round((this.canvas.clientHeight - loadingText.height) / 2);
@@ -188,34 +192,48 @@ export class PuzzleGame {
     this.resizeObserver.disconnect();
     this.application.stop();
     this.spritesheet.destroy();
-    this.application.destroy(true, {children: true, texture: true, baseTexture: true});
+    this.application.destroy({removeView: true}, {children: true, texture: true, textureSource: true, context: true});
   }
 
   public debug(message?: string | unknown): void {
     this.wrapper.innerHTML =`<p>${message}<p>`;
-    const renderer = (this.application.renderer as Renderer);
-    const webglVersion = renderer.context.webGLVersion;
-    const maxTextureSize = renderer.gl.getParameter(renderer.gl.MAX_TEXTURE_SIZE);
-    const maxViewportDims = renderer.gl.getParameter(renderer.gl.MAX_VIEWPORT_DIMS);
-    const currentViewport = renderer.gl.getParameter(renderer.gl.VIEWPORT);
-    const maxRenderBufferSize = renderer.gl.getParameter(renderer.gl.MAX_RENDERBUFFER_SIZE);
-    const maxTextureImageUnits = renderer.gl.getParameter(renderer.gl.MAX_TEXTURE_IMAGE_UNITS);
-    const maxCombinedTextureImageUnits = renderer.gl.getParameter(renderer.gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS);
-    const currentRenderBufferWidth = renderer.gl.getRenderbufferParameter(renderer.gl.RENDERBUFFER, renderer.gl.RENDERBUFFER_WIDTH);
-    const currentRenderBufferHeight = renderer.gl.getRenderbufferParameter(renderer.gl.RENDERBUFFER, renderer.gl.RENDERBUFFER_HEIGHT);
-    this.wrapper.innerHTML =`<p style="overflow-y: auto; overflow-x: hidden; display: block; width: 100%; height: 100%; padding: 5px;">
-      ${message ? `${message}<br><br>` : ''}
-      WebGL ${webglVersion}<br>
-      Pixel Density: ${window.devicePixelRatio}<br>
-      Max texture size: ${maxTextureSize}<br>
-      Max texture image units: ${maxTextureImageUnits}<br>
-      Max combined texture image units: ${maxCombinedTextureImageUnits}<br>
-      Max render buffer size: ${maxRenderBufferSize}<br>
-      Max viewport size: ${maxViewportDims}<br>
-      Current render buffer width: ${currentRenderBufferWidth}<br>
-      Current render buffer height: ${currentRenderBufferHeight}<br>
-      Current viewport size: ${currentViewport}<br>
-    </p>`;
+    const renderer = this.application.renderer;
+    if (renderer instanceof WebGLRenderer) {
+      const webglVersion = renderer.context.webGLVersion;
+      const maxTextureSize = renderer.gl.getParameter(renderer.gl.MAX_TEXTURE_SIZE);
+      const maxViewportDims = renderer.gl.getParameter(renderer.gl.MAX_VIEWPORT_DIMS);
+      const currentViewport = renderer.gl.getParameter(renderer.gl.VIEWPORT);
+      const maxRenderBufferSize = renderer.gl.getParameter(renderer.gl.MAX_RENDERBUFFER_SIZE);
+      const maxTextureImageUnits = renderer.gl.getParameter(renderer.gl.MAX_TEXTURE_IMAGE_UNITS);
+      const maxCombinedTextureImageUnits = renderer.gl.getParameter(renderer.gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS);
+      const currentRenderBufferWidth = renderer.gl.getRenderbufferParameter(renderer.gl.RENDERBUFFER, renderer.gl.RENDERBUFFER_WIDTH);
+      const currentRenderBufferHeight = renderer.gl.getRenderbufferParameter(renderer.gl.RENDERBUFFER, renderer.gl.RENDERBUFFER_HEIGHT);
+      this.wrapper.innerHTML =`<p style="overflow-y: auto; overflow-x: hidden; display: block; width: 100%; height: 100%; padding: 5px;">
+        ${message ? `${message}<br><br>` : ''}
+        WebGL ${webglVersion}<br>
+        Pixel Density: ${window.devicePixelRatio}<br>
+        Max texture size: ${maxTextureSize}<br>
+        Max texture image units: ${maxTextureImageUnits}<br>
+        Max combined texture image units: ${maxCombinedTextureImageUnits}<br>
+        Max render buffer size: ${maxRenderBufferSize}<br>
+        Max viewport size: ${maxViewportDims}<br>
+        Current render buffer width: ${currentRenderBufferWidth}<br>
+        Current render buffer height: ${currentRenderBufferHeight}<br>
+        Current viewport size: ${currentViewport}<br>
+      </p>`;
+    }
+    else {
+      const limits = renderer.gpu.device.limits;
+      this.wrapper.innerHTML =`<p style="overflow-y: auto; overflow-x: hidden; display: block; width: 100%; height: 100%; padding: 5px;">
+        ${message ? `${message}<br><br>` : ''}
+        WebGPU<br>
+        Pixel Density: ${window.devicePixelRatio}<br>
+        Max texture dimension 2D: ${limits.maxTextureDimension2D}<br>
+        Max texture array layers: ${limits.maxTextureArrayLayers}<br>
+        Max buffer size: ${limits.maxBufferSize}<br>
+        Supported features: ${Array.from(renderer.gpu.device.features.values()).join(', ')}<br>
+      </p>`;
+    }
     try {
       this.stop();
     }
@@ -227,25 +245,14 @@ export class PuzzleGame {
   private drawBorder(scale: number): void {
     const borderThickness = this.gameBorderThickness / scale;
     this.border.clear();
-    this.border.lineStyle({
+    this.border.rect(0, 0, this.playableAreaWidth, this.playableAreaHeight).stroke({
       width: borderThickness,
       color: this.puzzleBackgroundColor,
-      alignment: 1,
+      alignment: 0,
     });
-    this.border.moveTo(0, 0);
-    this.border.lineTo(this.playableAreaWidth, 0);
-    this.border.lineTo(this.playableAreaWidth, this.playableAreaHeight);
-    this.border.lineTo(0, this.playableAreaHeight);
-    this.border.closePath();
   }
 
   private updateViewportScale(targetScale: number): void {
-    // if (targetScale >= 1) {
-    //   this.spritesheet.setScaleModeToNearest();
-    // }
-    // else {
-    //   this.spritesheet.setScaleModeToLinear();
-    // }
     this.viewportContainer.scale.set(targetScale);
     this.drawBorder(targetScale);
   }
@@ -274,8 +281,8 @@ export class PuzzleGame {
   }
 
   private async addPieces(): Promise<void> {
-    const renderingContext = (this.application.renderer as Renderer).gl;
-    const maxTextureSize = renderingContext.getParameter(renderingContext.MAX_TEXTURE_SIZE);
+    const renderer = this.application.renderer;
+    const maxTextureSize = renderer instanceof WebGLRenderer ? renderer.gl.getParameter(renderer.gl.MAX_TEXTURE_SIZE) : renderer.gpu.device.limits.maxTextureDimension2D;
     const pieceTextures = await this.spritesheet.parse(maxTextureSize);
 
     for (let x = 0; x < this.horizontalPieceCount; x++) {
@@ -760,13 +767,18 @@ export class PuzzleGame {
     if (!this.pieceContainer.children.every((pieceGroup) => pieceGroup.isLocked())) {
       return false;
     }
-    const finishedText = new Text('GG', {
-      fill: 0xffffff,
-      stroke: 0x000000,
-      strokeThickness: 4,
-      lineJoin: LINE_JOIN.BEVEL,
-      fontSize: 60,
-      fontFamily: 'sans-serif',
+    const finishedText = new Text({
+      text: 'GG',
+      style: {
+        fill: 0xffffff,
+        stroke: {
+          color: 0x000000,
+          width: 4,
+          join: 'bevel',
+        },
+        fontSize: 60,
+        fontFamily: 'sans-serif',
+      },
     });
     finishedText.x = Math.round((document.documentElement.clientWidth - finishedText.width) / 2);
     finishedText.y = Math.round((document.documentElement.clientHeight - finishedText.height) / 2);

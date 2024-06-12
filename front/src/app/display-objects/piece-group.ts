@@ -1,5 +1,5 @@
-import { Container } from '@pixi/display';
-import { OutlineFilter } from '@pixi/filter-outline';
+import { OutlineFilter } from 'pixi-filters';
+import { Container } from 'pixi.js';
 import type { PieceSprite } from './piece-sprite';
 import type { Point } from '../models/geometry';
 
@@ -35,20 +35,22 @@ export class PieceGroup extends Container<PieceSprite> {
   }
 
   public addOutline(): void {
-    if (!this.filters) {
-      this.filters = [
-        new OutlineFilter(2, 0x000000, 0.1),
-        new OutlineFilter(2, 0xffffff, 0.1),
-      ];
-      // this.cacheAsBitmap = true;
-    }
+    this.filters = [
+      new OutlineFilter({
+        thickness: 2,
+        color: 0x000000,
+        quality: 0.1,
+      }),
+      new OutlineFilter({
+        thickness: 2,
+        color: 0xffffff,
+        quality: 0.1,
+      }),
+    ];
   }
 
   public removeOutline(): void {
-    if (this.filters) {
-      this.filters = null;
-      // this.cacheAsBitmap = false;
-    }
+    this.filters = [];
   }
 
   public lock(): void {
