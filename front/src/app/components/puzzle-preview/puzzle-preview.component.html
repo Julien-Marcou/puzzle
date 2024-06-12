@@ -7,22 +7,23 @@
         Choix du puzzle :
       </div>
       <div class="thumbnails">
-        <button
-          class="thumbnail"
-          type="button"
-          *ngFor="let puzzle of puzzles"
-          [class.active]="!loadingPuzzle && selectedPuzzle === puzzle"
-          [class.loading]="loadingPuzzle === puzzle"
-          [disabled]="!loadingPuzzle && selectedPuzzle === puzzle || loadingPuzzle === puzzle"
-          (click)="setPuzzle(puzzle)">
-          <img
-            class="thumbnail-image"
-            src="{{ puzzleThumbnailFolder + '/' + puzzle }}"
-            alt="Puzzle: {{ puzzle }}">
-          <div class="thumbnail-marker">
-            <app-checkmark-spinner [complete]="selectedPuzzle === puzzle"></app-checkmark-spinner>
-          </div>
-        </button>
+        @for (puzzle of puzzles; track puzzle) {
+          <button
+            class="thumbnail"
+            type="button"
+            [class.active]="!loadingPuzzle && selectedPuzzle === puzzle"
+            [class.loading]="loadingPuzzle === puzzle"
+            [disabled]="!loadingPuzzle && selectedPuzzle === puzzle || loadingPuzzle === puzzle"
+            (click)="setPuzzle(puzzle)">
+            <img
+              class="thumbnail-image"
+              src="{{ puzzleThumbnailFolder + '/' + puzzle }}"
+              alt="Puzzle: {{ puzzle }}">
+            <div class="thumbnail-marker">
+              <app-checkmark-spinner [complete]="selectedPuzzle === puzzle"></app-checkmark-spinner>
+            </div>
+          </button>
+        }
       </div>
     </div>
 
