@@ -1,7 +1,8 @@
-import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+import { bootstrapApplication } from '@angular/platform-browser';
 import { settings, ENV, SCALE_MODES, BaseTexture } from '@pixi/core';
 // import * as PIXI from 'pixi.js';
-import { AppModule } from './app/app.module';
+import { AppComponent } from './app/app.component';
+import { APP_CONFIG } from './app/app.config';
 
 settings.RESOLUTION = Math.max(1, window.devicePixelRatio);
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -13,5 +14,4 @@ BaseTexture.defaultOptions.scaleMode = SCALE_MODES.NEAREST;
 // eslint-disable-next-line
 // (window as any).__PIXI_INSPECTOR_GLOBAL_HOOK__?.register({ PIXI: PIXI });
 
-platformBrowserDynamic().bootstrapModule(AppModule)
-  .catch((err) => console.error(err));
+bootstrapApplication(AppComponent, APP_CONFIG).catch((err) => console.error(err));

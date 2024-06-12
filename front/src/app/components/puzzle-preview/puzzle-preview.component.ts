@@ -1,9 +1,11 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { AXIS_TO_DIMENSION, VALID_AXES } from '../../models/geometry';
 import { PuzzleGame } from '../../models/puzzle-game';
 import { PuzzlePreview } from '../../models/puzzle-preview';
 import { PuzzleSpritesheet } from '../../models/puzzle-spritesheet';
 import { FileFetchError, FileReadError, ImageCreateError, ImageLoader } from '../../services/image-loader';
+import { CheckmarkSpinnerComponent } from '../checkmark-spinner/checkmark-spinner.component';
 import type { AbortablePromise } from '../../models/abortable-promise';
 import type { Point } from '../../models/geometry';
 
@@ -24,9 +26,11 @@ class ImageTooSmallError extends Error {
 type ImageError = 'unknown' | 'too-heavy' | 'too-small' | 'too-big' | 'file-read' | 'file-fetch' | 'image-create';
 
 @Component({
-  selector: 'app-puzzle-preview',
-  templateUrl: './puzzle-preview.component.html',
-  styleUrls: ['./puzzle-preview.component.scss'],
+    selector: 'app-puzzle-preview',
+    templateUrl: './puzzle-preview.component.html',
+    styleUrls: ['./puzzle-preview.component.scss'],
+    standalone: true,
+    imports: [FormsModule, CheckmarkSpinnerComponent],
 })
 export class PuzzlePreviewComponent implements OnInit {
 
