@@ -6,6 +6,10 @@
     "outDir": "./out-tsc/app",
     "types": []
   },
+  "files": [
+    "src/main.ts",
+    "src/zone-flags.ts"
+  ],
   "include": [
     "src/**/*.ts"
   ]
