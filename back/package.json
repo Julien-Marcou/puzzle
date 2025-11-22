@@ -6,7 +6,7 @@
     "serve": "npm run clean && npm run assets && tsc-watch --onSuccess \"node ./dist/puzzle/index.js\" --noClear",
     "lint": "eslint \"**/*.ts\"",
     "clean": "rimraf dist/puzzle",
-    "assets": "copyfiles .env dist/puzzle"
+    "assets": "cpy .env dist/puzzle"
   },
   "private": true,
   "dependencies": {
@@ -21,7 +21,7 @@
     "@eslint/json": "^0.14.0",
     "@stylistic/eslint-plugin": "^5.6.1",
     "@types/node": "^24.10.1",
-    "copyfiles": "^2.4.1",
+    "cpy-cli": "^6.0.0",
     "esbuild": "^0.27.0",
     "eslint": "^9.39.1",
     "eslint-import-resolver-typescript": "^4.4.4",
