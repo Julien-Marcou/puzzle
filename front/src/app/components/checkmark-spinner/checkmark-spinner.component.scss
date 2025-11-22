@@ -27,16 +27,22 @@ $transparent-stroke-length: 200; // In pixels (any value longer than the svg pat
 
 @keyframes spinnerPulse {
   0% {
-    stroke-dasharray: #{$one-degree-arc-length * $min-arc-opening}, #{$transparent-stroke-length};
+    stroke-dasharray:
+      #{$one-degree-arc-length * $min-arc-opening},
+      #{$transparent-stroke-length};
     stroke-dashoffset: #{-$one-degree-arc-length * (360 - $min-arc-opening)};
     transform: rotate(#{$min-arc-opening * 0.5}deg);
   }
   50% {
-    stroke-dasharray: #{$one-degree-arc-length * $max-arc-opening}, #{$transparent-stroke-length};
+    stroke-dasharray:
+      #{$one-degree-arc-length * $max-arc-opening},
+      #{$transparent-stroke-length};
     stroke-dashoffset: 0;
   }
   100% {
-    stroke-dasharray: #{$one-degree-arc-length * $min-arc-opening}, #{$transparent-stroke-length};
+    stroke-dasharray:
+      #{$one-degree-arc-length * $min-arc-opening},
+      #{$transparent-stroke-length};
     stroke-dashoffset: 0;
     transform: rotate(#{-$min-arc-opening * 0.5}deg);
   }
@@ -48,7 +54,9 @@ $transparent-stroke-length: 200; // In pixels (any value longer than the svg pat
     transform: var(--transform);
   }
   100% {
-    stroke-dasharray: 0, #{$transparent-stroke-length};
+    stroke-dasharray:
+      0,
+      #{$transparent-stroke-length};
     transform: var(--target-transform);
   }
 }
@@ -64,16 +72,22 @@ $transparent-stroke-length: 200; // In pixels (any value longer than the svg pat
 
 @keyframes checkmarkDrawing {
   0% {
-    stroke-dasharray: 0, #{$transparent-stroke-length};
+    stroke-dasharray:
+      0,
+      #{$transparent-stroke-length};
     stroke-dashoffset: 0;
   }
   20% {
-    stroke-dasharray: 0, #{$transparent-stroke-length};
+    stroke-dasharray:
+      0,
+      #{$transparent-stroke-length};
     stroke-dashoffset: #{-$checkmark-offset};
   }
   100% {
     stroke-dashoffset: #{-$checkmark-offset};
-    stroke-dasharray: #{$chekmark-stroke-length}, #{$transparent-stroke-length};
+    stroke-dasharray:
+      #{$chekmark-stroke-length},
+      #{$transparent-stroke-length};
   }
 }
 
@@ -82,7 +96,8 @@ $transparent-stroke-length: 200; // In pixels (any value longer than the svg pat
   width: 100%;
   height: 100%;
 
-  .arc, .checkmark {
+  .arc,
+  .checkmark {
     stroke-width: #{$stroke-width};
     stroke: #000;
   }
@@ -97,7 +112,9 @@ $transparent-stroke-length: 200; // In pixels (any value longer than the svg pat
   }
   .checkmark {
     stroke-dashoffset: 1;
-    stroke-dasharray: 0, #{$transparent-stroke-length};
+    stroke-dasharray:
+      0,
+      #{$transparent-stroke-length};
   }
 
   &.complete {
@@ -106,11 +123,14 @@ $transparent-stroke-length: 200; // In pixels (any value longer than the svg pat
       transform: var(--transform);
     }
     .arc {
-      animation: spinnerStop var(--stop-duration) ease-out forwards, spinnerFade 0.1s linear forwards var(--stop-duration);
+      animation:
+        spinnerStop var(--stop-duration) ease-out forwards,
+        spinnerFade 0.1s linear forwards var(--stop-duration);
       stroke-dashoffset: var(--stroke-dashoffset);
     }
     .checkmark {
-      animation: checkmarkDrawing #{$checkmark-drawing-duration} cubic-bezier(0, 0, 0.2, 0.1) forwards var(--stop-duration);
+      animation: checkmarkDrawing #{$checkmark-drawing-duration} cubic-bezier(0, 0, 0.2, 0.1)
+        forwards var(--stop-duration);
     }
   }
 }

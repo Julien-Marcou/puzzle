@@ -36,7 +36,8 @@
     line-height: 1.6rem;
     border: 2px solid #bbb;
 
-    &:hover, &:focus-visible {
+    &:hover,
+    &:focus-visible {
       border-color: #666;
     }
 
@@ -48,7 +49,6 @@
 }
 
 .puzzle-image-parameter {
-
   .thumbnails {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -89,13 +89,14 @@
     text-align: center;
 
     .condition {
-      font-size: 0.7em;
+      font-size: 0.7rem;
       color: #bbb;
       margin-top: 0.4rem;
     }
   }
 
-  .file-input:hover + .file-button, .file-input:focus-visible + .file-button {
+  .file-input:hover + .file-button,
+  .file-input:focus-visible + .file-button {
     border-color: #666;
   }
 
@@ -106,7 +107,6 @@
 }
 
 .puzzle-size-parameter {
-
   .puzzle-size-input {
     display: block;
     width: 400px;
@@ -135,7 +135,6 @@
 }
 
 .puzzle-preview {
-
   .puzzle-preview-output {
     position: relative;
     overflow: hidden;
@@ -183,7 +182,8 @@
   right: 0;
   overflow: hidden;
 
-  .close-puzzle-button, .debug-webgl-button {
+  .close-puzzle-button,
+  .debug-webgl-button {
     z-index: 1;
     position: absolute;
     top: 10px;
@@ -195,7 +195,8 @@
     text-shadow: 0 0 2px #000;
     box-shadow: 0 2px 4px 2px rgba(0, 0, 0, 0.25);
 
-    &:hover, &:focus-visible {
+    &:hover,
+    &:focus-visible {
       background-color: #50504a;
       color: #fff;
     }
