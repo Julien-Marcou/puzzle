@@ -10,27 +10,25 @@
   },
   "private": true,
   "dependencies": {
-    "cookie": "^0.6.0",
-    "dotenv": "^16.4.5",
-    "inversify": "^6.0.2",
+    "cookie": "^1.0.2",
+    "dotenv": "^17.2.3",
+    "inversify": "^7.10.4",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1",
-    "socket.io": "^4.7.5"
+    "rxjs": "^7.8.2",
+    "socket.io": "^4.8.1"
   },
   "devDependencies": {
     "@eslint/json": "^0.14.0",
     "@stylistic/eslint-plugin": "^5.6.1",
-    "@types/cookie": "^0.6.0",
-    "@types/jest": "^29.5.12",
-    "@types/node": "^20.14.2",
+    "@types/node": "^24.10.1",
     "copyfiles": "^2.4.1",
-    "esbuild": "^0.21.5",
+    "esbuild": "^0.27.0",
     "eslint": "^9.39.1",
     "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-import-x": "^4.16.1",
-    "rimraf": "^5.0.7",
-    "tsc-watch": "^6.2.0",
-    "typescript": "^5.4.5",
+    "rimraf": "^6.1.2",
+    "tsc-watch": "^7.2.0",
+    "typescript": "^5.9.3",
     "typescript-eslint": "^8.47.0"
   }
 }
