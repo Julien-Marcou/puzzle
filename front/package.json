@@ -8,6 +8,18 @@
     "watch": "ng build --watch --configuration development",
     "lint": "ng lint --fix"
   },
+  "prettier": {
+    "printWidth": 100,
+    "singleQuote": true,
+    "overrides": [
+      {
+        "files": "*.html",
+        "options": {
+          "parser": "angular"
+        }
+      }
+    ]
+  },
   "private": true,
   "dependencies": {
     "@angular/animations": "^19.2.15",
@@ -25,21 +37,21 @@
     "zone.js": "~0.15.1"
   },
   "devDependencies": {
-    "@angular-eslint/builder": "^19.8.1",
-    "@angular-eslint/eslint-plugin": "^19.8.1",
-    "@angular-eslint/eslint-plugin-template": "^19.8.1",
-    "@angular-eslint/schematics": "^19.8.1",
-    "@angular-eslint/template-parser": "^19.8.1",
     "@angular/build": "^19.2.19",
     "@angular/cli": "^19.2.19",
     "@angular/compiler-cli": "^19.2.15",
-    "@typescript-eslint/eslint-plugin": "^7.13.0",
-    "@typescript-eslint/parser": "^7.13.0",
-    "eslint": "^8.57.0",
-    "eslint-plugin-import": "^2.29.1",
-    "eslint-plugin-jsdoc": "^48.2.9",
-    "eslint-plugin-prefer-arrow": "^1.2.3",
-    "typescript": "~5.8.3"
+    "@eslint/css": "^0.14.1",
+    "@eslint/json": "^0.14.0",
+    "@stylistic/eslint-plugin": "^5.6.1",
+    "angular-eslint": "^19.8.1",
+    "eslint": "^9.39.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-import-resolver-typescript": "^4.4.4",
+    "eslint-plugin-import-x": "^4.16.1",
+    "eslint-plugin-prettier": "^5.5.4",
+    "prettier": "~3.6.2",
+    "typescript": "~5.8.3",
+    "typescript-eslint": "^8.47.0"
   },
   "overrides": {
     "@types/css-font-loading-module": "^0.0.8"
