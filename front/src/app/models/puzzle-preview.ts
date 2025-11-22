@@ -1,7 +1,8 @@
-import { Canvas } from '../services/canvas';
+import type { Point } from './geometry';
+
 import { Axis, VALID_AXES } from './geometry';
 import { TabbedEdge } from './tabbed-edge';
-import type { Point } from './geometry';
+import { Canvas } from '../services/canvas';
 
 export class PuzzlePreview {
 
@@ -29,7 +30,7 @@ export class PuzzlePreview {
   constructor(
     private readonly canvas: HTMLCanvasElement,
     private readonly image: ImageBitmap,
-    private readonly imageOffset: Point = {x: 0, y: 0},
+    private readonly imageOffset: Point = { x: 0, y: 0 },
     private readonly pieceSize: number,
     private readonly horizontalPieceCount: number,
     private readonly verticalPieceCount: number,
@@ -43,7 +44,7 @@ export class PuzzlePreview {
       y: Math.round(this.imageOffset.y * this.scale),
     };
     this.pieceSize = Math.round(this.pieceSize * this.scale);
-    this.imageWidth = this.pieceSize * this.horizontalPieceCount+ this.imageOffset.x * 2;
+    this.imageWidth = this.pieceSize * this.horizontalPieceCount + this.imageOffset.x * 2;
     this.imageHeight = this.pieceSize * this.verticalPieceCount + this.imageOffset.y * 2;
     const strokeScale = this.imageWidth > this.canvas.clientWidth ? this.imageWidth / this.canvas.clientWidth : 1;
     this.pieceStrokeThickness = this.defaultPieceStrokeThickness * strokeScale;
@@ -259,7 +260,7 @@ export class PuzzlePreview {
     }
   }
 
-  private getPatterns(): Record<'horizontal'|'vertical'|'middle', CanvasPattern> {
+  private getPatterns(): Record<'horizontal' | 'vertical' | 'middle', CanvasPattern> {
     const middle = Math.round(this.pieceSize / 2);
 
     // Horizontal pattern

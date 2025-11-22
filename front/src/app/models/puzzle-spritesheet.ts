@@ -1,17 +1,19 @@
-import { Texture, Spritesheet } from 'pixi.js';
-import { Canvas } from '../services/canvas';
-import { Axis } from './geometry';
-import { PieceShape } from './piece-shape';
-import { StraightEdge } from './straight-edge';
-import { TabbedEdge } from './tabbed-edge';
 import type { Edge } from './edge';
 import type { Point } from './geometry';
 import type { SpritesheetData } from 'pixi.js';
 
+import { Texture, Spritesheet } from 'pixi.js';
+
+import { Axis } from './geometry';
+import { PieceShape } from './piece-shape';
+import { StraightEdge } from './straight-edge';
+import { TabbedEdge } from './tabbed-edge';
+import { Canvas } from '../services/canvas';
+
 // Represent the top-left (included) and the bottom-right (excluded) coordinates of a quadrant.
 // This is used to split the original spritesheet in 4 spritesheets
 // when the puzzle's texture exceed the maximum texture size allowed by the device.
-type Quadrant = {start: Point; end: Point};
+type Quadrant = { start: Point; end: Point };
 
 export class PuzzleSpritesheet {
 
@@ -25,13 +27,13 @@ export class PuzzleSpritesheet {
 
   private readonly canvas: HTMLCanvasElement;
   private readonly context: CanvasRenderingContext2D;
-  private readonly edgeMatrices: Record<Axis, Array<Array<Edge>>>;
-  private readonly pieceShapeMatrix: Array<Array<PieceShape>>;
-  private spritesheets: Array<Spritesheet> = [];
+  private readonly edgeMatrices: Record<Axis, Edge[][]>;
+  private readonly pieceShapeMatrix: PieceShape[][];
+  private spritesheets: Spritesheet[] = [];
 
   constructor(
     private readonly image: ImageBitmap,
-    private readonly imageOffset: Point = {x: 0, y: 0},
+    private readonly imageOffset: Point = { x: 0, y: 0 },
     public readonly pieceSize: number,
     public readonly horizontalPieceCount: number,
     public readonly verticalPieceCount: number,
@@ -53,11 +55,11 @@ export class PuzzleSpritesheet {
   }
 
   public async parse(maxTextureSize: number): Promise<{
-    textures: Array<Array<Texture>>;
-    alphaChannels: Array<Array<Array<Uint8ClampedArray>>>;
+    textures: Texture[][];
+    alphaChannels: Uint8ClampedArray[][][];
   }> {
     // Split the original spritesheet into 4 quadrants if needed
-    let spritesheetQuadrants: Array<Quadrant> = [{
+    let spritesheetQuadrants: Quadrant[] = [{
       start: {
         x: 0,
         y: 0,
@@ -79,11 +81,11 @@ export class PuzzleSpritesheet {
     }
 
     // Populate the alpha channels from the spritesheet
-    const pieceAlphaChannels: Array<Array<Array<Uint8ClampedArray>>> = Array.from(Array(this.horizontalPieceCount), () => new Array(this.verticalPieceCount));
+    const pieceAlphaChannels = Array.from<Uint8ClampedArray[][][], Uint8ClampedArray[][]>(Array(this.horizontalPieceCount), () => new Array<Uint8ClampedArray[]>(this.verticalPieceCount));
     this.populateSpritesheetAlphaChannels(pieceAlphaChannels);
 
     // Populate the textures from the different spritesheet quadrants
-    const pieceTextures: Array<Array<Texture>> = Array.from(Array(this.horizontalPieceCount), () => Array(this.verticalPieceCount));
+    const pieceTextures = Array.from<Texture[][], Texture[]>(Array(this.horizontalPieceCount), () => Array<Texture>(this.verticalPieceCount));
     await Promise.all(spritesheetQuadrants.map((quadrant) => this.populateSpritesheetTexturesFromQuadrant(pieceTextures, quadrant)));
     return {
       textures: pieceTextures,
@@ -98,7 +100,7 @@ export class PuzzleSpritesheet {
     this.spritesheets = [];
   }
 
-  private populateSpritesheetAlphaChannels(alphaChannels: Array<Array<Array<Uint8ClampedArray>>>): void {
+  private populateSpritesheetAlphaChannels(alphaChannels: Uint8ClampedArray[][][]): void {
     const bytePerPixel = 4;
     const alphaChannelOffset = 3;
     const spritesheetWidth = this.canvas.width;
@@ -121,13 +123,13 @@ export class PuzzleSpritesheet {
     }
   }
 
-  private async populateSpritesheetTexturesFromQuadrant(textures: Array<Array<Texture>>, quadrant: Quadrant): Promise<void> {
+  private async populateSpritesheetTexturesFromQuadrant(textures: Texture[][], quadrant: Quadrant): Promise<void> {
     const quandrantSpritesheet = await this.getSpritesheetFromQuadrant(quadrant);
     const quandantTextures = await quandrantSpritesheet.parse();
     for (let x = quadrant.start.x; x < quadrant.end.x; x++) {
       for (let y = quadrant.start.y; y < quadrant.end.y; y++) {
         const texture = quandantTextures[`${x}_${y}`];
-        if (!texture) {
+        if (!(texture as Texture | undefined)) {
           throw new Error('Unable to retrieve piece texture');
         }
         textures[x][y] = texture;
@@ -181,7 +183,7 @@ export class PuzzleSpritesheet {
     return spritesheetData;
   }
 
-  private splitQuadrant(quadrant: Quadrant): Array<Quadrant> {
+  private splitQuadrant(quadrant: Quadrant): Quadrant[] {
     // Split a quadrant into 4 new quadrants
     const quadrantSplitX = Math.ceil((quadrant.start.x + quadrant.end.x) / 2);
     const quadrantSplitY = Math.ceil((quadrant.start.y + quadrant.end.y) / 2);
@@ -233,7 +235,7 @@ export class PuzzleSpritesheet {
     ];
   }
 
-  private buildEdgeMatrix(edgeAxis: Axis): Array<Array<Edge>> {
+  private buildEdgeMatrix(edgeAxis: Axis): Edge[][] {
     // There is one more edge when adding them along their opposite axis
     // e.g. when edges are verticals, if there is 10 pieces, then there is 11 vertical edges along the horizontal axis
     const edgeCountX = this.horizontalPieceCount + (edgeAxis === Axis.Vertical ? 1 : 0);
@@ -243,9 +245,8 @@ export class PuzzleSpritesheet {
       const edgeList = [];
       for (let y = 0; y < edgeCountY; y++) {
         if (
-          edgeAxis === Axis.Vertical && (x === 0 || x === this.horizontalPieceCount)
-          ||
-          edgeAxis === Axis.Horizontal && (y === 0 || y === this.verticalPieceCount)
+          (edgeAxis === Axis.Vertical && (x === 0 || x === this.horizontalPieceCount))
+          || (edgeAxis === Axis.Horizontal && (y === 0 || y === this.verticalPieceCount))
         ) {
           edgeList.push(new StraightEdge(edgeAxis));
         }
@@ -258,7 +259,7 @@ export class PuzzleSpritesheet {
     return edgeMatrice;
   }
 
-  private buildPieceShapeMatrix(): Array<Array<PieceShape>> {
+  private buildPieceShapeMatrix(): PieceShape[][] {
     const pieceShapeMatrix = [];
     for (let x = 0; x < this.horizontalPieceCount; x++) {
       const pieceShapeList = [];
@@ -268,8 +269,8 @@ export class PuzzleSpritesheet {
           y * this.pieceSize,
           this.pieceSize,
           this.edgeMatrices.horizontal[x][y],
-          this.edgeMatrices.vertical[x+1][y],
-          this.edgeMatrices.horizontal[x][y+1],
+          this.edgeMatrices.vertical[x + 1][y],
+          this.edgeMatrices.horizontal[x][y + 1],
           this.edgeMatrices.vertical[x][y],
         ));
       }

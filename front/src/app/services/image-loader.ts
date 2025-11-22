@@ -1,44 +1,50 @@
 import { AbortablePromise } from '../models/abortable-promise';
 
 export class FileReadError extends Error {
+
   constructor(message: string, options?: ErrorOptions) {
     super(message, options);
     this.name = 'FileReadError';
   }
+
 }
 export class FileFetchError extends Error {
+
   constructor(message: string, options?: ErrorOptions) {
     super(message, options);
     this.name = 'FileFetchError';
   }
+
 }
 
 export class ImageCreateError extends Error {
+
   constructor(message: string, options?: ErrorOptions) {
     super(message, options);
     this.name = 'ImageCreateError';
   }
+
 }
 
 export class ImageLoader {
 
   public static loadFromFile(file: File): AbortablePromise<ImageBitmap> {
-    return new AbortablePromise(async (resolve, reject, abortSignal) => {
+    return new AbortablePromise((resolve, reject, abortSignal) => {
       const fileReader = new FileReader();
 
       abortSignal.addEventListener('abort', () => {
         fileReader.abort();
       });
 
-      fileReader.addEventListener('load', async () => {
-        try {
-          const blob = new Blob([fileReader.result as ArrayBuffer]);
-          const imageBitmap = await ImageLoader.createFromBlob(blob);
-          resolve(imageBitmap);
-        }
-        catch (error) {
-          reject(error);
-        }
+      fileReader.addEventListener('load', () => {
+        const blob = new Blob([fileReader.result as ArrayBuffer]);
+        ImageLoader.createFromBlob(blob)
+          .then((imageBitmap) => {
+            resolve(imageBitmap);
+          })
+          .catch((error: unknown) => {
+            reject(error);
+          });
       });
 
       fileReader.addEventListener('error', () => {
@@ -58,7 +64,7 @@ export class ImageLoader {
   public static loadFromUrl(src: string): AbortablePromise<ImageBitmap> {
     return new AbortablePromise(async (resolve, reject, abortSignal) => {
       try {
-        const response = await fetch(src, {signal: abortSignal});
+        const response = await fetch(src, { signal: abortSignal });
         if (response.status !== 200) {
           throw new FileFetchError(`Image fetching ended with HTTP error code ${response.status}`);
         }
@@ -77,7 +83,7 @@ export class ImageLoader {
       return await createImageBitmap(blob);
     }
     catch (error) {
-      throw new ImageCreateError('Could not convert the file to ImageBitmap', {cause: error instanceof Error ? error : undefined});
+      throw new ImageCreateError('Could not convert the file to ImageBitmap', { cause: error instanceof Error ? error : undefined });
     }
   }
 

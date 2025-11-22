@@ -1,8 +1,9 @@
-import { Canvas } from '../services/canvas';
-import { Geometry } from '../services/geometry';
-import { Axis } from './geometry';
 import type { Edge } from './edge';
 import type { StraightPath } from './geometry';
+
+import { Axis } from './geometry';
+import { Canvas } from '../services/canvas';
+import { Geometry } from '../services/geometry';
 
 export class StraightEdge implements Edge {
 

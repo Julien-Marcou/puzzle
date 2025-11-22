@@ -1,15 +1,16 @@
-import { Canvas } from '../services/canvas';
-import { Geometry } from '../services/geometry';
-import { Axis } from './geometry';
-import { PieceShape } from './piece-shape';
 import type { Edge } from './edge';
 import type { BezierPath } from './geometry';
 
+import { Axis } from './geometry';
+import { PieceShape } from './piece-shape';
+import { Canvas } from '../services/canvas';
+import { Geometry } from '../services/geometry';
+
 export class TabbedEdge implements Edge {
 
-  private paths: Array<BezierPath>;
+  private paths: BezierPath[];
 
-  constructor(axis: Axis, private readonly addVariance: boolean = true) {
+  constructor(axis: Axis, private readonly addVariance = true) {
     this.paths = this.getPaths();
     this.applyRandomTabDirection();
     if (axis === Axis.Vertical) {
@@ -31,7 +32,7 @@ export class TabbedEdge implements Edge {
     }
   }
 
-  private getPaths(): Array<BezierPath> {
+  private getPaths(): BezierPath[] {
     // Build the path horizontaly then invert the axis if needed
     const tabCenterX = 50 + this.getRandomVariance(-PieceShape.Parameters.tabCenteringVariance, PieceShape.Parameters.tabCenteringVariance);
     const tabTopY = -PieceShape.Parameters.tabOverflow + this.getRandomVariance(-PieceShape.Parameters.tabOverflowVariance, PieceShape.Parameters.tabRecessVariance);

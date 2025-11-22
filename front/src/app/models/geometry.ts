@@ -18,11 +18,11 @@ export const AXIS_TO_DIMENSION = {
   [Axis.Vertical]: Dimension.Height,
 } as const;
 
-export type Point = {x: number; y: number};
+export type Point = { x: number; y: number };
 
-export type Vector = {dx: number; dy: number};
+export type Vector = { dx: number; dy: number };
 
-export type Size = {width: number; height: number};
+export type Size = { width: number; height: number };
 
 export type StraightPath = {
   start: Point;

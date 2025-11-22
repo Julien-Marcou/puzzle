@@ -1,4 +1,6 @@
-import { Component, ElementRef, Input, ViewChild } from '@angular/core';
+import type { ElementRef } from '@angular/core';
+
+import { Component, Input, ViewChild } from '@angular/core';
 
 @Component({
   selector: 'app-checkmark-spinner',
@@ -8,11 +10,11 @@ import { Component, ElementRef, Input, ViewChild } from '@angular/core';
 })
 export class CheckmarkSpinnerComponent {
 
-  private static MatrixRegExp = CheckmarkSpinnerComponent.getMatrixRegExp();
+  private static readonly MatrixRegExp = CheckmarkSpinnerComponent.getMatrixRegExp();
 
-  @ViewChild('host', {static: true}) public hostRef!: ElementRef<SVGElement>;
-  @ViewChild('spinner', {static: true}) public spinnerRef!: ElementRef<SVGElement>;
-  @ViewChild('arc', {static: true}) public arcRef!: ElementRef<SVGElement>;
+  @ViewChild('host', { static: true }) public hostRef!: ElementRef<SVGElement>;
+  @ViewChild('spinner', { static: true }) public spinnerRef!: ElementRef<SVGElement>;
+  @ViewChild('arc', { static: true }) public arcRef!: ElementRef<SVGElement>;
 
   private readonly minStopAnimationDuration = 400; // In milliseconds
   private readonly maxStopAnimationDuration = 1000; // In milliseconds
@@ -30,7 +32,8 @@ export class CheckmarkSpinnerComponent {
   private static getMatrixRegExp(): RegExp {
     const parameterValueRegex = '([^,]+)';
     const parameterSeparatorRegex = ',\\s*';
-    const sixParameterList = Array(6).fill(parameterValueRegex).join(parameterSeparatorRegex);
+    const sixParameterList = Array(6).fill(parameterValueRegex)
+      .join(parameterSeparatorRegex);
     const matrixRegex = `matrix\\(${sixParameterList}\\)`;
     return new RegExp(matrixRegex, 'i');
   }

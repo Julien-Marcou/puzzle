@@ -1,5 +1,8 @@
-import { ApplicationConfig } from '@angular/core';
-import { Routes, provideRouter } from '@angular/router';
+import type { ApplicationConfig } from '@angular/core';
+import type { Routes } from '@angular/router';
+
+import { provideRouter } from '@angular/router';
+
 import { PuzzlePreviewComponent } from './components/puzzle-preview/puzzle-preview.component';
 
 const APP_ROUTES: Routes = [

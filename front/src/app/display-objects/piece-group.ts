@@ -1,7 +1,8 @@
-import { OutlineFilter } from 'pixi-filters';
-import { Container } from 'pixi.js';
 import type { PieceSprite } from './piece-sprite';
 import type { Point } from '../models/geometry';
+
+import { OutlineFilter } from 'pixi-filters';
+import { Container } from 'pixi.js';
 
 export class PieceGroup extends Container<PieceSprite> {
 

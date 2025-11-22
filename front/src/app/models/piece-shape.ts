@@ -13,6 +13,7 @@ export class PieceShape {
     tabOverflowVariance: 8,
     tabRecessVariance: 2,
   };
+
   public static readonly MarginFactor = (this.Parameters.tabOverflow + this.Parameters.tabOverflowVariance + 1) / 100;
 
   public readonly path: Path2D;

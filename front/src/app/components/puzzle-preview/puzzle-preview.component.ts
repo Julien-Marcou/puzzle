@@ -1,41 +1,48 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import type { AbortablePromise } from '../../models/abortable-promise';
+import type { Point } from '../../models/geometry';
+import type { ElementRef, OnInit } from '@angular/core';
+
+import { Component, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+
 import { AXIS_TO_DIMENSION, VALID_AXES } from '../../models/geometry';
 import { PuzzleGame } from '../../models/puzzle-game';
 import { PuzzlePreview } from '../../models/puzzle-preview';
 import { PuzzleSpritesheet } from '../../models/puzzle-spritesheet';
 import { FileFetchError, FileReadError, ImageCreateError, ImageLoader } from '../../services/image-loader';
 import { CheckmarkSpinnerComponent } from '../checkmark-spinner/checkmark-spinner.component';
-import type { AbortablePromise } from '../../models/abortable-promise';
-import type { Point } from '../../models/geometry';
 
 class ImageTooBigError extends Error {
+
   constructor(message: string, options?: ErrorOptions) {
     super(message, options);
     this.name = 'ImageTooBigError';
   }
+
 }
 
 class ImageTooSmallError extends Error {
+
   constructor(message: string, options?: ErrorOptions) {
     super(message, options);
     this.name = 'ImageTooSmallError';
   }
+
 }
 
 type ImageError = 'unknown' | 'too-heavy' | 'too-small' | 'too-big' | 'file-read' | 'file-fetch' | 'image-create';
 
 @Component({
-    selector: 'app-puzzle-preview',
-    templateUrl: './puzzle-preview.component.html',
-    styleUrls: ['./puzzle-preview.component.scss'],
-    imports: [FormsModule, CheckmarkSpinnerComponent],
+  selector: 'app-puzzle-preview',
+  templateUrl: './puzzle-preview.component.html',
+  styleUrls: ['./puzzle-preview.component.scss'],
+  imports: [FormsModule, CheckmarkSpinnerComponent],
 })
 export class PuzzlePreviewComponent implements OnInit {
 
-  @ViewChild('puzzleFileInput', {static: true}) private puzzleFileInput!: ElementRef<HTMLInputElement>;
-  @ViewChild('puzzlePreview', {static: true}) private puzzlePreviewRef!: ElementRef<HTMLCanvasElement>;
-  @ViewChild('puzzleGameWrapper', {static: true}) private puzzleGameWrapperRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('puzzleFileInput', { static: true }) private puzzleFileInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('puzzlePreview', { static: true }) private puzzlePreviewRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('puzzleGameWrapper', { static: true }) private puzzleGameWrapperRef!: ElementRef<HTMLCanvasElement>;
 
   public readonly puzzleImageFolder = '/img/puzzles';
   public readonly puzzleThumbnailFolder = '/img/puzzle-thumbnails';
@@ -72,8 +79,8 @@ export class PuzzlePreviewComponent implements OnInit {
   public selectedCustomPuzzle?: string;
   public loadingCustomPuzzle?: string;
   public selectedPieceSizeIndex = 1;
-  public validPieceSizes: Array<number> = [50, 100, 200, 400, 500];
-  public puzzleOffset: Point = {x: 0, y: 0};
+  public validPieceSizes: number[] = [50, 100, 200, 400, 500];
+  public puzzleOffset: Point = { x: 0, y: 0 };
   public pieceSize = 100;
   public horizontalPieceCount = 10;
   public verticalPieceCount = 10;
@@ -96,7 +103,7 @@ export class PuzzlePreviewComponent implements OnInit {
   private renderingPreview = false;
   private imageErrorTimeout?: number;
 
-  public async ngOnInit(): Promise<void> {
+  public ngOnInit(): void {
     this.puzzleFileInput.nativeElement.addEventListener('dragover', () => {
       this.puzzleFileInput.nativeElement.classList.add('drop');
     });
@@ -114,7 +121,9 @@ export class PuzzlePreviewComponent implements OnInit {
     // - update piece size
     // - update puzzle size
     // - render puzzle preview
-    await this.setPuzzle(this.puzzles[0]);
+    this.setPuzzle(this.puzzles[0]).catch((error: unknown) => {
+      console.error(error);
+    });
   }
 
   public clearImageError(): void {
@@ -160,7 +169,7 @@ export class PuzzlePreviewComponent implements OnInit {
     await this.updatePuzzleSize();
   }
 
-  public async startPuzzle(): Promise<void> {
+  public startPuzzle(): void {
     if (!this.puzzleImage) {
       return;
     }

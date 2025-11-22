@@ -1,7 +1,8 @@
-import { Sprite } from 'pixi.js';
 import type { PieceGroup } from './piece-group';
 import type { Point } from '../models/geometry';
 import type { Texture } from 'pixi.js';
+
+import { Sprite } from 'pixi.js';
 
 export class PieceSprite extends Sprite {
 
@@ -19,10 +20,10 @@ export class PieceSprite extends Sprite {
 
   public isPointInBoundingBox(point: Point): boolean {
     return (
-      point.x >= this.x &&
-      point.y >= this.y &&
-      point.x < this.x + this.width &&
-      point.y < this.y + this.height
+      point.x >= this.x
+      && point.y >= this.y
+      && point.x < this.x + this.width
+      && point.y < this.y + this.height
     );
   }
 

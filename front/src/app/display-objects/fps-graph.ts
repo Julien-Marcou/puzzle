@@ -1,5 +1,6 @@
-import { Texture, Container, Sprite, Text } from 'pixi.js';
 import type { Ticker } from 'pixi.js';
+
+import { Texture, Container, Sprite, Text } from 'pixi.js';
 
 export class FpsGraph extends Container {
 
@@ -14,7 +15,7 @@ export class FpsGraph extends Container {
   private internalWidth: number;
   private internalHeight: number;
 
-  private fps: Array<number> = [];
+  private fps: number[] = [];
   private cumulativeElapsed = 0;
   private cumulativeFps = 0;
   private fpsBarWidth = 0;
@@ -22,14 +23,14 @@ export class FpsGraph extends Container {
 
   constructor(
     private readonly ticker: Ticker,
-    width: number = 200,
-    height: number = 125,
-    private readonly padding: number = 10,
-    private readonly fontSize: number = 16,
-    private readonly fontSpacing: number = 10,
-    private readonly sampleSize: number = 30,
-    private readonly sampleDuration: number = 300,
-    private readonly fpsTarget: number = 60,
+    width = 200,
+    height = 125,
+    private readonly padding = 10,
+    private readonly fontSize = 16,
+    private readonly fontSpacing = 10,
+    private readonly sampleSize = 30,
+    private readonly sampleDuration = 300,
+    private readonly fpsTarget = 60,
   ) {
     super();
     this.internalWidth = width;
@@ -187,7 +188,7 @@ export class FpsGraph extends Container {
     if (fps > 56) {
       return 0x41ce57;
     }
-    else if(fps > 49) {
+    else if (fps > 49) {
       return 0xa2e72a;
     }
     else if (fps > 39) {

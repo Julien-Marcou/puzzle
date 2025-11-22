@@ -6,17 +6,19 @@ export const enum PromiseState {
 }
 
 export class AbortError extends Error {
+
   constructor(message: string, options?: ErrorOptions) {
     super(message, options);
     this.name = 'AbortError';
   }
+
 }
 
 export type AbortableExecutor<T> = (
   resolve: (value: T) => void,
   reject: (reason?: unknown) => void,
   abortSignal: AbortSignal,
-) => void;
+) => void | Promise<void>;
 
 export class AbortablePromise<T> extends Promise<T> {
 
@@ -38,7 +40,10 @@ export class AbortablePromise<T> extends Promise<T> {
         this.state = PromiseState.Aborted;
         innerReject(new AbortError('Promise has been aborted'));
       });
-      executor(resolve, reject, abortController.signal);
+      Promise.resolve(executor(resolve, reject, abortController.signal)).catch((error: unknown) => {
+        console.error(error);
+        reject(error);
+      });
     });
     this.abortController = abortController;
   }
