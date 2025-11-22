@@ -1,9 +1,10 @@
-import { watch, statSync } from 'fs';
 import type { FSWatcher } from 'fs';
+
+import { watch, statSync } from 'fs';
 
 export class FileWatcher {
 
-  private static WatchInode = process.platform === 'linux';
+  private static readonly WatchInode = process.platform === 'linux';
 
   private inode?: number;
   private watcher?: FSWatcher;

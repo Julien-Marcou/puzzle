@@ -1,4 +1,5 @@
 import { inject, injectable } from 'inversify';
+
 import { HttpServer } from './services/http-server';
 
 @injectable()

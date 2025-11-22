@@ -1,6 +1,8 @@
 import { config } from 'dotenv';
 import { BindingScopeEnum, Container } from 'inversify';
+
 import 'reflect-metadata';
+
 import { App } from './app';
 
 export type SSLConfig = {
@@ -26,33 +28,33 @@ export class Env {
   }
 
   private bindHostname(): void {
-    if (!process.env.HOSTNAME) {
+    if (!process.env['HOSTNAME']) {
       throw new Error('HOSTNAME is not defined in the .env file');
     }
-    this.container.bind<string>('HOSTNAME').toConstantValue(process.env.HOSTNAME);
+    this.container.bind<string>('HOSTNAME').toConstantValue(process.env['HOSTNAME']);
   }
 
   private bindPort(): void {
-    if (!process.env.PORT) {
+    if (!process.env['PORT']) {
       throw new Error('PORT is not defined in the .env file');
     }
-    this.container.bind<number>('PORT').toConstantValue(parseInt(process.env.PORT, 10));
+    this.container.bind<number>('PORT').toConstantValue(parseInt(process.env['PORT'], 10));
   }
 
   private bindSSLConfig(): void {
-    if (process.env.SECURE?.toLowerCase() !== 'true') {
+    if (process.env['SECURE']?.toLowerCase() !== 'true') {
       this.container.bind<undefined>('SSL_CONFIG').toConstantValue(undefined);
       return;
     }
-    if (!process.env.SSL_CERTIFICATE_FILE) {
+    if (!process.env['SSL_CERTIFICATE_FILE']) {
       throw new Error('SSL_CERTIFICATE_FILE is not defined in the .env file');
     }
-    if (!process.env.SSL_PRIVATE_KEY_FILE) {
+    if (!process.env['SSL_PRIVATE_KEY_FILE']) {
       throw new Error('SSL_PRIVATE_KEY_FILE is not defined in the .env file');
     }
     this.container.bind<SSLConfig>('SSL_CONFIG').toConstantValue({
-      certificateFile: process.env.SSL_CERTIFICATE_FILE,
-      privateKeyFile: process.env.SSL_PRIVATE_KEY_FILE,
+      certificateFile: process.env['SSL_CERTIFICATE_FILE'],
+      privateKeyFile: process.env['SSL_PRIVATE_KEY_FILE'],
     });
   }
 

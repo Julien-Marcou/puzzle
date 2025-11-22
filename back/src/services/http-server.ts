@@ -1,20 +1,23 @@
-import { readFileSync } from 'fs';
-import { createServer as createUnsecureServer, Server as UnsecureServer } from 'http';
-import { createServer as createSecureServer, Server as SecureServer } from 'https';
-import { inject, injectable } from 'inversify';
-import { FileWatcher } from './file-watcher';
+/* eslint-disable no-console */
 import type { SSLConfig } from '../env';
 import type { Duplex } from 'stream';
 import type { SecureContextOptions } from 'tls';
 
+import { readFileSync } from 'fs';
+import { createServer as createUnsecureServer, Server as UnsecureServer } from 'http';
+import { createServer as createSecureServer, Server as SecureServer } from 'https';
+import { inject, injectable } from 'inversify';
+
+import { FileWatcher } from './file-watcher';
+
 @injectable()
 export class HttpServer {
 
-  private static SSLUpdateDelay = 10000;
+  private static readonly SSLUpdateDelay = 10000;
 
   public readonly server: SecureServer | UnsecureServer;
 
-  private connections: Set<Duplex> = new Set();
+  private connections = new Set<Duplex>();
   private sslFileWatchers?: ReadonlyArray<FileWatcher>;
   private sslUpdateTimeout?: NodeJS.Timeout;
 
@@ -25,7 +28,7 @@ export class HttpServer {
   ) {
     this.server = this.createServer();
 
-    this.server.on('connection', (socket) => {
+    this.server.on('connection', (socket: Duplex) => {
       this.connections.add(socket);
       socket.on('close', () => {
         this.connections.delete(socket);
