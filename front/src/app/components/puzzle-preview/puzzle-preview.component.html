@@ -19,26 +19,26 @@
           </button>
         }
       </div>
-    </div>
 
-    <label class="select-file-button" for="puzzle-file-input">
-      <input
-        [attr.title]="selectedCustomPuzzle ? selectedCustomPuzzle : null"
-        class="file-input"
-        id="puzzle-file-input"
-        type="file"
-        (input)="setCustomPuzzle($event)"
-        multiple="false"
-        #puzzleFileInput
-      />
-      <div class="file-button">
-        <div class="icon">
-          <span class="material-icons" aria-hidden="true">file_upload</span>
+      <label class="select-file-button" for="puzzle-file-input">
+        <input
+          [attr.title]="selectedCustomPuzzle ? selectedCustomPuzzle : null"
+          class="file-input"
+          id="puzzle-file-input"
+          type="file"
+          (input)="setCustomPuzzle($event)"
+          multiple="false"
+          #puzzleFileInput
+        />
+        <div class="file-button">
+          <div class="icon">
+            <span class="material-icons" aria-hidden="true">file_upload</span>
+          </div>
+          <div class="text">Choisir une image</div>
+          <div class="condition">(max. 4096×4096)</div>
         </div>
-        <div class="text">Choisir une image</div>
-        <div class="condition">(max. 4096×4096)</div>
-      </div>
-    </label>
+      </label>
+    </div>
 
     <div class="puzzle-size-parameter">
       <div class="label">Taille du puzzle :</div>
