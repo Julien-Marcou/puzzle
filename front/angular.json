@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "puzzle": {
+    "pixi-puzzle": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -92,10 +92,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "puzzle:build:production"
+              "buildTarget": "pixi-puzzle:build:production"
             },
             "development": {
-              "buildTarget": "puzzle:build:development"
+              "buildTarget": "pixi-puzzle:build:development"
             }
           },
           "defaultConfiguration": "development"

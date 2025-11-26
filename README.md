@@ -1,4 +1,4 @@
-# Puzzle
+# Pixi Puzzle
 
 https://puzzle.julien-marcou.fr/
 

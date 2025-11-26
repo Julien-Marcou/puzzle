@@ -1,12 +1,12 @@
 {
-  "name": "puzzle-back",
+  "name": "pixi-puzzle-back",
   "version": "0.0.0",
   "scripts": {
-    "build": "npm run clean && npm run assets && esbuild src/index.ts --bundle --minify --platform=node --outfile=dist/puzzle/index.js",
-    "serve": "npm run clean && npm run assets && tsc-watch --onSuccess \"node ./dist/puzzle/index.js\" --noClear",
+    "build": "npm run clean && npm run assets && esbuild src/index.ts --bundle --minify --platform=node --outfile=dist/pixi-puzzle/index.js",
+    "serve": "npm run clean && npm run assets && tsc-watch --onSuccess \"node ./dist/pixi-puzzle/index.js\" --noClear",
     "lint": "eslint \"**/*.ts\"",
-    "clean": "rimraf dist/puzzle",
-    "assets": "cpy .env dist/puzzle"
+    "clean": "rimraf dist/pixi-puzzle",
+    "assets": "cpy .env dist/pixi-puzzle"
   },
   "private": true,
   "dependencies": {
