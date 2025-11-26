@@ -2,6 +2,15 @@
   display: block;
 }
 
+.logo {
+  > img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
+  }
+}
+
 .puzzle-parameters {
   display: flex;
   flex-direction: column;
