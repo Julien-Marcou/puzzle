@@ -1,5 +1,5 @@
 import { config } from 'dotenv';
-import { BindingScopeEnum, Container } from 'inversify';
+import { Container } from 'inversify';
 
 import 'reflect-metadata';
 
@@ -17,7 +17,7 @@ export class Env {
 
   constructor() {
     config({ path: this.envFile });
-    this.container = new Container({ autoBindInjectable: true, defaultScope: BindingScopeEnum.Singleton });
+    this.container = new Container({ autobind: true, defaultScope: 'Singleton' });
     this.bindHostname();
     this.bindPort();
     this.bindSSLConfig();
