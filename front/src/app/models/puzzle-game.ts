@@ -209,7 +209,7 @@ export class PuzzleGame {
     this.resizeObserver.disconnect();
     this.application.stop();
     this.spritesheet.destroy();
-    this.application.destroy({ removeView: true }, { children: true, texture: true, textureSource: true, context: true });
+    this.application.destroy({ removeView: true, releaseGlobalResources: true }, { children: true, texture: true, textureSource: true, context: true });
   }
 
   /* eslint-disable @typescript-eslint/restrict-template-expressions, @typescript-eslint/no-base-to-string, @typescript-eslint/no-unsafe-assignment */
