@@ -1,5 +1,6 @@
 import { config } from 'dotenv';
 import { Container } from 'inversify';
+import { normalize } from 'node:path';
 
 import 'reflect-metadata';
 
@@ -12,11 +13,11 @@ export type SSLConfig = {
 
 export class Env {
 
-  private readonly envFile = `${__dirname}/.env`;
+  private readonly lookupDirectory = __dirname;
   private readonly container: Container;
 
   constructor() {
-    config({ path: this.envFile });
+    config({ path: normalize(`${this.lookupDirectory}/.env`), quiet: true });
     this.container = new Container({ autobind: true, defaultScope: 'Singleton' });
     this.bindHostname();
     this.bindPort();
@@ -53,8 +54,8 @@ export class Env {
       throw new Error('SSL_PRIVATE_KEY_FILE is not defined in the .env file');
     }
     this.container.bind<SSLConfig>('SSL_CONFIG').toConstantValue({
-      certificateFile: process.env['SSL_CERTIFICATE_FILE'],
-      privateKeyFile: process.env['SSL_PRIVATE_KEY_FILE'],
+      certificateFile: normalize(`${this.lookupDirectory}/${process.env['SSL_CERTIFICATE_FILE']}`),
+      privateKeyFile: normalize(`${this.lookupDirectory}/${process.env['SSL_PRIVATE_KEY_FILE']}`),
     });
   }
 
