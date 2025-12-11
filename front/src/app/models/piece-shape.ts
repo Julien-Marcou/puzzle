@@ -23,26 +23,26 @@ export class PieceShape {
   constructor(
     public readonly x: number,
     public readonly y: number,
-    private readonly size: number,
-    private readonly northEdge: Edge,
-    private readonly eastEdge: Edge,
-    private readonly southEdge: Edge,
-    private readonly westEdge: Edge,
-    pathOffset: number,
+    size: number,
+    northEdge: Edge,
+    eastEdge: Edge,
+    southEdge: Edge,
+    westEdge: Edge,
+    pieceMargin: number,
   ) {
-    this.path = this.buildPath(pathOffset);
+    this.path = this.buildPath(size, northEdge, eastEdge, southEdge, westEdge, pieceMargin);
   }
 
-  private buildPath(pathOffset: number): Path2D {
-    const start = pathOffset;
-    const end = this.size + pathOffset;
+  private buildPath(size: number, northEdge: Edge, eastEdge: Edge, southEdge: Edge, westEdge: Edge, pieceMargin: number): Path2D {
+    const start = pieceMargin;
+    const end = size + pieceMargin;
 
     const path = new Path2D();
     path.moveTo(start, start);
-    this.northEdge.appendTo(path, start, start, this.size, false);
-    this.eastEdge.appendTo(path, end, start, this.size, false);
-    this.southEdge.appendTo(path, start, end, this.size, true);
-    this.westEdge.appendTo(path, start, start, this.size, true);
+    northEdge.appendTo(path, start, start, size, false);
+    eastEdge.appendTo(path, end, start, size, false);
+    southEdge.appendTo(path, start, end, size, true);
+    westEdge.appendTo(path, start, start, size, true);
     path.closePath();
 
     return path;

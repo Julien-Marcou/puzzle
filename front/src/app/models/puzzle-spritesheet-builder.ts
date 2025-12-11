@@ -10,8 +10,6 @@ import { Canvas } from '../services/canvas';
 
 export class PuzzleSpritesheetBuilder {
 
-  // private readonly pieceMargin: number;
-  // private readonly pieceSpriteSize: number;
   private readonly edgeMatrices: Record<Axis, Edge[][]>;
   private readonly pieceShapeMatrix: PieceShape[][];
 
