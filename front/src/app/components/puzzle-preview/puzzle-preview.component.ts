@@ -8,7 +8,6 @@ import { FormsModule } from '@angular/forms';
 import { AXIS_TO_DIMENSION, VALID_AXES } from '../../models/geometry';
 import { PuzzleGame } from '../../models/puzzle-game';
 import { PuzzlePreview } from '../../models/puzzle-preview';
-import { PuzzleSpritesheet } from '../../models/puzzle-spritesheet';
 import { FileFetchError, FileReadError, ImageCreateError, ImageLoader } from '../../services/image-loader';
 import { CheckmarkSpinnerComponent } from '../checkmark-spinner/checkmark-spinner.component';
 
@@ -42,7 +41,7 @@ export class PuzzlePreviewComponent implements OnInit {
 
   @ViewChild('puzzleFileInput', { static: true }) private puzzleFileInput!: ElementRef<HTMLInputElement>;
   @ViewChild('puzzlePreview', { static: true }) private puzzlePreviewRef!: ElementRef<HTMLCanvasElement>;
-  @ViewChild('puzzleGameWrapper', { static: true }) private puzzleGameWrapperRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('puzzleGameWrapper', { static: true }) private puzzleGameWrapperRef!: ElementRef<HTMLElement>;
 
   public readonly puzzleImageFolder = '/img/puzzles';
   public readonly puzzleThumbnailFolder = '/img/puzzle-thumbnails';
@@ -169,27 +168,30 @@ export class PuzzlePreviewComponent implements OnInit {
     await this.updatePuzzleSize();
   }
 
-  public startPuzzle(): void {
+  public async startPuzzle(): Promise<void> {
     if (!this.puzzleImage) {
       return;
     }
-    const puzzleSpritesheet = new PuzzleSpritesheet(
+
+    this.gameStarted = true;
+    this.puzzleGame = new PuzzleGame(
+      this.puzzleGameWrapperRef.nativeElement,
       this.puzzleImage,
       this.puzzleOffset,
       this.pieceSize,
       this.horizontalPieceCount,
       this.verticalPieceCount,
     );
-    window.requestAnimationFrame(() => {
-      this.puzzleGame = new PuzzleGame(
-        this.puzzleGameWrapperRef.nativeElement,
-        puzzleSpritesheet,
-        this.pieceSize,
-        this.horizontalPieceCount,
-        this.verticalPieceCount,
-      );
+
+    // Wait one frame to make sure the canvas wrapper is rendered,
+    // so that the puzzle can start with the correct resolution
+    await new Promise<void>((resolve) => {
+      window.requestAnimationFrame(() => {
+        resolve();
+      });
     });
-    this.gameStarted = true;
+
+    await this.puzzleGame.start();
   }
 
   public exitPuzzle(): void {

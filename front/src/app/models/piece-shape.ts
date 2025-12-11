@@ -12,6 +12,8 @@ export class PieceShape {
     tabCenteringVariance: 11,
     tabOverflowVariance: 8,
     tabRecessVariance: 2,
+    strokeColor: '#fff',
+    strokeThickness: 1,
   };
 
   public static readonly MarginFactor = (this.Parameters.tabOverflow + this.Parameters.tabOverflowVariance + 1) / 100;
@@ -26,18 +28,23 @@ export class PieceShape {
     private readonly eastEdge: Edge,
     private readonly southEdge: Edge,
     private readonly westEdge: Edge,
+    pathOffset: number,
   ) {
-    this.path = this.buildPath();
+    this.path = this.buildPath(pathOffset);
   }
 
-  private buildPath(): Path2D {
+  private buildPath(pathOffset: number): Path2D {
+    const start = pathOffset;
+    const end = this.size + pathOffset;
+
     const path = new Path2D();
-    path.moveTo(0, 0);
-    this.northEdge.appendTo(path, 0, 0, this.size, false);
-    this.eastEdge.appendTo(path, this.size, 0, this.size, false);
-    this.southEdge.appendTo(path, 0, this.size, this.size, true);
-    this.westEdge.appendTo(path, 0, 0, this.size, true);
+    path.moveTo(start, start);
+    this.northEdge.appendTo(path, start, start, this.size, false);
+    this.eastEdge.appendTo(path, end, start, this.size, false);
+    this.southEdge.appendTo(path, start, end, this.size, true);
+    this.westEdge.appendTo(path, start, start, this.size, true);
     path.closePath();
+
     return path;
   }
 

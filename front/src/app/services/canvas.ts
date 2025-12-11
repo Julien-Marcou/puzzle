@@ -13,6 +13,14 @@ export class Canvas {
     return context;
   }
 
+  public static getOffscreenContext2D(canvas: OffscreenCanvas, options?: CanvasRenderingContext2DSettings): OffscreenCanvasRenderingContext2D {
+    const context = canvas.getContext('2d', options);
+    if (!context) {
+      throw new Error('Could not get the 2D context from the offscreen canvas');
+    }
+    return context;
+  }
+
   public static createPattern(context: CanvasRenderingContext2D, image: CanvasImageSource, repetition: Repetition = 'repeat'): CanvasPattern {
     const pattern = context.createPattern(image, repetition);
     if (!pattern) {

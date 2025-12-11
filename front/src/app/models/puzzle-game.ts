@@ -1,9 +1,11 @@
 import type { Point } from './geometry';
 import type { PuzzleSpritesheet } from './puzzle-spritesheet';
+import type { PuzzleSpritesheetParameters } from './puzzle-spritesheet-parameters';
 
 import { isDevMode } from '@angular/core';
-import { AbstractRenderer, Application, Container, Graphics, Text, WebGLRenderer } from 'pixi.js';
+import { AbstractRenderer, Application, Container, Graphics, Text, WebGLRenderer, WebGPURenderer } from 'pixi.js';
 
+import { PieceShape } from './piece-shape';
 import { environment } from '../../environments/environment';
 import { FpsGraph } from '../display-objects/fps-graph';
 import { PieceGroup } from '../display-objects/piece-group';
@@ -59,6 +61,8 @@ export class PuzzleGame {
   private readonly playableAreaWidth: number;
   private readonly playableAreaHeight: number;
   private readonly puzzleOrigin: Point;
+  private readonly pieceMargin: number;
+  private readonly pieceSpriteSize: number;
   private readonly pieceSnappingMargin: number;
   private readonly pieces: PieceSprite[][] = [];
 
@@ -81,13 +85,17 @@ export class PuzzleGame {
 
   constructor(
     private readonly wrapper: HTMLElement,
-    private readonly spritesheet: PuzzleSpritesheet,
-    public readonly pieceSize: number,
-    public readonly horizontalPieceCount: number,
-    public readonly verticalPieceCount: number,
+    private readonly puzzleImage: ImageBitmap,
+    private readonly puzzleOffset: Point,
+    private readonly pieceSize: number,
+    private readonly horizontalPieceCount: number,
+    private readonly verticalPieceCount: number,
   ) {
     this.puzzleWidth = this.pieceSize * this.horizontalPieceCount;
     this.puzzleHeight = this.pieceSize * this.verticalPieceCount;
+    this.pieceMargin = Math.ceil(PieceShape.MarginFactor * this.pieceSize) + PieceShape.Parameters.strokeThickness;
+    this.pieceSpriteSize = this.pieceSize + this.pieceMargin * 2;
+
     const playableAreaPadding = Math.max(this.puzzleWidth * 2, this.puzzleHeight * 2);
     this.playableAreaWidth = this.puzzleWidth + playableAreaPadding;
     this.playableAreaHeight = this.puzzleHeight + playableAreaPadding;
@@ -128,38 +136,46 @@ export class PuzzleGame {
     this.viewportContainer.visible = false;
 
     this.application = new Application();
+    this.application.stage.addChild(this.viewportContainer);
+
     this.resizeObserver = new ResizeObserver(() => {
       this.resize();
     });
-    this.init().catch((error: unknown) => {
-      console.error(error);
-    });
   }
 
-  public async init(): Promise<void> {
-    await this.application.init({
-      canvas: this.canvas,
-      width: this.wrapper.clientWidth,
-      height: this.wrapper.clientHeight,
-      backgroundColor: this.gameBackgroundColor,
-      autoStart: false,
-      resolution: AbstractRenderer.defaultOptions.resolution,
-      autoDensity: true,
-      manageImports: false,
-    });
-    this.application.stage.addChild(this.viewportContainer);
-
-    if (environment.showFpsGraph) {
-      const fpsGraph = new FpsGraph(this.application.ticker);
-      fpsGraph.x = 10;
-      fpsGraph.y = 10;
-      this.application.stage.addChild(fpsGraph);
-    }
-
+  public async start(): Promise<void> {
     try {
+      await this.application.init({
+        canvas: this.canvas,
+        width: this.wrapper.clientWidth,
+        height: this.wrapper.clientHeight,
+        backgroundColor: this.gameBackgroundColor,
+        autoStart: false,
+        resolution: AbstractRenderer.defaultOptions.resolution,
+        autoDensity: true,
+        manageImports: false,
+      });
+
+      // Render first frame with loading text
+      if (environment.showFpsGraph) {
+        this.displayFpsGraph();
+      }
+      const loadingText = this.displayLoadingMessage();
+      await this.renderFrame();
+
+      // Waiting for piece sprites to be ready
+      const spritesheet = await this.buildSpritesheet();
+      this.addPieces(spritesheet);
+
+      // Switch from loading text to puzzle view
+      this.viewportContainer.visible = true;
+      this.application.stage.removeChild(loadingText);
+      await this.renderFrame();
+
+      // Start events & render loop
       this.resizeObserver.observe(this.wrapper);
-      this.addGameEventListeners();
-      await this.start();
+      this.startGameEventListeners();
+      this.application.start();
     }
     catch (error) {
       console.error(error);
@@ -169,52 +185,19 @@ export class PuzzleGame {
     }
   }
 
-  public async start(): Promise<void> {
-    const loadingText = new Text({
-      text: 'Chargement...',
-      style: {
-        fill: 0xffffff,
-        stroke: {
-          color: 0x000000,
-          width: 4,
-          join: 'bevel',
-        },
-        fontSize: 42,
-        fontFamily: 'sans-serif',
-      },
-    });
-    loadingText.x = Math.round((this.canvas.clientWidth - loadingText.width) / 2);
-    loadingText.y = Math.round((this.canvas.clientHeight - loadingText.height) / 2);
-    this.application.stage.addChild(loadingText);
-    this.application.render();
-
-    await new Promise<void>((resolve, reject) => {
-      window.requestAnimationFrame(() => {
-        this.addPieces()
-          .then(() => {
-            this.viewportContainer.visible = true;
-            this.application.stage.removeChild(loadingText);
-            this.application.start();
-            resolve();
-          })
-          .catch((error: unknown) => {
-            console.error(error);
-            reject(new Error('Error during application starting', { cause: error }));
-          });
-      });
-    });
-  }
-
   public stop(): void {
-    this.resizeObserver.disconnect();
-    this.application.stop();
-    this.spritesheet.destroy();
-    this.application.destroy({ removeView: true, releaseGlobalResources: true }, { children: true, texture: true, textureSource: true, context: true });
+    try {
+      this.resizeObserver.disconnect();
+      this.application.stop();
+      this.application.destroy(true, true);
+    }
+    catch (error) {
+      console.error(error);
+    }
   }
 
   /* eslint-disable @typescript-eslint/restrict-template-expressions, @typescript-eslint/no-base-to-string, @typescript-eslint/no-unsafe-assignment */
   public debug(message?: unknown): void {
-    this.wrapper.innerHTML = `<p>${message}<p>`;
     const renderer = this.application.renderer;
     if (renderer instanceof WebGLRenderer) {
       const webglVersion = renderer.context.webGLVersion;
@@ -240,7 +223,7 @@ export class PuzzleGame {
         Current viewport size: ${currentViewport}<br>
       </p>`;
     }
-    else {
+    else if (renderer instanceof WebGPURenderer) {
       const limits = renderer.gpu.device.limits;
       this.wrapper.innerHTML = `<p style="overflow-y: auto; overflow-x: hidden; display: block; width: 100%; height: 100%; padding: 5px;">
         ${message ? `${message}<br><br>` : ''}
@@ -252,14 +235,71 @@ export class PuzzleGame {
         Supported features: ${Array.from(renderer.gpu.device.features.values()).join(', ')}<br>
       </p>`;
     }
-    try {
-      this.stop();
+    else {
+      this.wrapper.innerHTML = `<p>${message}<p>`;
     }
-    catch {
-      // Silently fail
-    }
+    this.stop();
   }
   /* eslint-enable @typescript-eslint/restrict-template-expressions, @typescript-eslint/no-base-to-string, @typescript-eslint/no-unsafe-assignment */
+
+  private async renderFrame(): Promise<void> {
+    this.application.render();
+    await new Promise<void>((resolve) => {
+      window.requestAnimationFrame(() => {
+        resolve();
+      });
+    });
+  }
+
+  private displayFpsGraph(): void {
+    const fpsGraph = new FpsGraph(this.application.ticker);
+    fpsGraph.x = 10;
+    fpsGraph.y = 10;
+    this.application.stage.addChild(fpsGraph);
+  }
+
+  private displayLoadingMessage(): Text {
+    const loadingText = new Text({
+      text: 'Chargement...',
+      style: {
+        fill: 0xffffff,
+        stroke: {
+          color: 0x000000,
+          width: 4,
+          join: 'bevel',
+        },
+        fontSize: 42,
+        fontFamily: 'sans-serif',
+      },
+    });
+    loadingText.x = Math.round((this.canvas.clientWidth - loadingText.width) / 2);
+    loadingText.y = Math.round((this.canvas.clientHeight - loadingText.height) / 2);
+    this.application.stage.addChild(loadingText);
+    return loadingText;
+  }
+
+  private async buildSpritesheet(): Promise<PuzzleSpritesheet> {
+    const { promise, resolve, reject } = Promise.withResolvers<PuzzleSpritesheet>();
+    const worker = new Worker(new URL('./puzzle-spritesheet-worker', import.meta.url));
+    worker.postMessage({
+      image: this.puzzleImage,
+      imageOffset: this.puzzleOffset,
+      pieceSize: this.pieceSize,
+      pieceMargin: this.pieceMargin,
+      pieceSpriteSize: this.pieceSpriteSize,
+      horizontalPieceCount: this.horizontalPieceCount,
+      verticalPieceCount: this.verticalPieceCount,
+    } satisfies PuzzleSpritesheetParameters);
+    worker.onmessage = ({ data }: MessageEvent<PuzzleSpritesheet | null>): void => {
+      if (data) {
+        resolve(data);
+      }
+      else {
+        reject(new Error('Spritesheet build error'));
+      }
+    };
+    return await promise;
+  }
 
   private drawBorder(scale: number): void {
     const borderThickness = this.gameBorderThickness / scale;
@@ -299,19 +339,14 @@ export class PuzzleGame {
     this.viewportContainer.y = offsetY;
   }
 
-  private async addPieces(): Promise<void> {
-    const renderer = this.application.renderer;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const maxTextureSize: number = renderer instanceof WebGLRenderer ? renderer.gl.getParameter(renderer.gl.MAX_TEXTURE_SIZE) : renderer.gpu.device.limits.maxTextureDimension2D;
-    const pieceTextures = await this.spritesheet.parse(maxTextureSize);
-
+  private addPieces(spritesheet: PuzzleSpritesheet): void {
     for (let x = 0; x < this.horizontalPieceCount; x++) {
       const pieceColumn = [];
       for (let y = 0; y < this.verticalPieceCount; y++) {
         const pieceSprite = new PieceSprite(
           { x, y },
-          pieceTextures.textures[x][y],
-          pieceTextures.alphaChannels[x][y],
+          spritesheet.sprites[x][y],
+          spritesheet.alphaChannels[x][y],
         );
         const pieceGroup = new PieceGroup();
         pieceGroup.addChild(pieceSprite);
@@ -372,7 +407,7 @@ export class PuzzleGame {
     return result;
   }
 
-  private addGameEventListeners(): void {
+  private startGameEventListeners(): void {
     const handlePieceHovering = (event: PointerEvent): void => {
       const previousCanInteract = this.canInteract;
       const canvasPosition = this.getCanvasPosition(event);
@@ -436,10 +471,10 @@ export class PuzzleGame {
       };
       const x = Math.round(this.initialPieceGroupDrag.pieceOrigin.x + dragVector.x);
       const y = Math.round(this.initialPieceGroupDrag.pieceOrigin.y + dragVector.y);
-      const minX = -this.pieceContainer.x - this.spritesheet.pieceMargin;
-      const minY = -this.pieceContainer.y - this.spritesheet.pieceMargin;
-      const maxX = this.playableAreaWidth - this.pieceContainer.x - this.spritesheet.pieceSpriteSize + this.spritesheet.pieceMargin;
-      const maxY = this.playableAreaHeight - this.pieceContainer.y - this.spritesheet.pieceSpriteSize + this.spritesheet.pieceMargin;
+      const minX = -this.pieceContainer.x - this.pieceMargin;
+      const minY = -this.pieceContainer.y - this.pieceMargin;
+      const maxX = this.playableAreaWidth - this.pieceContainer.x - this.pieceSpriteSize + this.pieceMargin;
+      const maxY = this.playableAreaHeight - this.pieceContainer.y - this.pieceSpriteSize + this.pieceMargin;
       this.initialPieceGroupDrag.pieceGroup.x = Math.min(Math.max(x, minX), maxX);
       this.initialPieceGroupDrag.pieceGroup.y = Math.min(Math.max(y, minY), maxY);
     };
@@ -749,8 +784,8 @@ export class PuzzleGame {
 
   private getPieceGroupLockPosition(pieceGroup: PieceGroup): Point | undefined {
     const piece = pieceGroup.children[0];
-    const validX = (piece.cell.x * this.pieceSize) - this.spritesheet.pieceMargin;
-    const validY = (piece.cell.y * this.pieceSize) - this.spritesheet.pieceMargin;
+    const validX = (piece.cell.x * this.pieceSize) - this.pieceMargin;
+    const validY = (piece.cell.y * this.pieceSize) - this.pieceMargin;
     if (Math.abs(pieceGroup.x - validX) < this.pieceSnappingMargin && Math.abs(pieceGroup.y - validY) < this.pieceSnappingMargin) {
       return { x: validX, y: validY };
     }
@@ -808,8 +843,8 @@ export class PuzzleGame {
 
   private shufflePieces(): void {
     const remainingPieces = [...this.pieceContainer.children];
-    const horizontalSpriteCount = Math.floor(this.puzzleWidth / this.spritesheet.pieceSpriteSize);
-    const verticalSpriteCount = Math.floor(this.puzzleHeight / this.spritesheet.pieceSpriteSize);
+    const horizontalSpriteCount = Math.floor(this.puzzleWidth / this.pieceSpriteSize);
+    const verticalSpriteCount = Math.floor(this.puzzleHeight / this.pieceSpriteSize);
     const cellWidth = this.puzzleWidth / horizontalSpriteCount;
     const cellHeight = this.puzzleHeight / verticalSpriteCount;
     let horizontalCellCount = horizontalSpriteCount + 2;

@@ -1,8 +1,7 @@
 import type { PieceGroup } from './piece-group';
 import type { Point } from '../models/geometry';
-import type { Texture } from 'pixi.js';
 
-import { Sprite } from 'pixi.js';
+import { Texture, Sprite } from 'pixi.js';
 
 export class PieceSprite extends Sprite {
 
@@ -12,9 +11,15 @@ export class PieceSprite extends Sprite {
 
   constructor(
     public readonly cell: Readonly<Point>,
-    texture: Texture,
+    pieceImage: ImageBitmap,
     private readonly alphaChannel: ReadonlyArray<Uint8ClampedArray>,
   ) {
+    const texture = Texture.from(pieceImage);
+    texture.source.resolution = 1;
+    texture.source.scaleMode = 'linear';
+    // texture.source.antialias = true;
+    // texture.source.sampleCount = MSAA_QUALITY.HIGH;
+    texture.source.autoGenerateMipmaps = true;
     super(texture);
   }
 
