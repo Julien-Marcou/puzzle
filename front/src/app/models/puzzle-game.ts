@@ -473,8 +473,8 @@ export class PuzzleGame {
       const y = Math.round(this.initialPieceGroupDrag.pieceOrigin.y + dragVector.y);
       const minX = -this.pieceContainer.x - this.pieceMargin;
       const minY = -this.pieceContainer.y - this.pieceMargin;
-      const maxX = this.playableAreaWidth - this.pieceContainer.x - this.pieceSpriteSize + this.pieceMargin;
-      const maxY = this.playableAreaHeight - this.pieceContainer.y - this.pieceSpriteSize + this.pieceMargin;
+      const maxX = this.playableAreaWidth - this.pieceContainer.x - this.initialPieceGroupDrag.pieceGroup.width + this.pieceMargin;
+      const maxY = this.playableAreaHeight - this.pieceContainer.y - this.initialPieceGroupDrag.pieceGroup.height + this.pieceMargin;
       this.initialPieceGroupDrag.pieceGroup.x = Math.min(Math.max(x, minX), maxX);
       this.initialPieceGroupDrag.pieceGroup.y = Math.min(Math.max(y, minY), maxY);
     };
