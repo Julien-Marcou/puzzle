@@ -2,7 +2,7 @@ import type { AbortablePromise } from '../../models/abortable-promise';
 import type { Point } from '../../models/geometry';
 import type { ElementRef, OnInit } from '@angular/core';
 
-import { Component, signal, ViewChild } from '@angular/core';
+import { Component, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { AXIS_TO_DIMENSION, VALID_AXES } from '../../models/geometry';
@@ -39,9 +39,9 @@ type ImageError = 'unknown' | 'too-heavy' | 'too-small' | 'too-big' | 'file-read
 })
 export class PuzzlePreviewComponent implements OnInit {
 
-  @ViewChild('puzzleFileInput', { static: true }) private puzzleFileInput!: ElementRef<HTMLInputElement>;
-  @ViewChild('puzzlePreview', { static: true }) private puzzlePreviewRef!: ElementRef<HTMLCanvasElement>;
-  @ViewChild('puzzleGameWrapper', { static: true }) private puzzleGameWrapperRef!: ElementRef<HTMLElement>;
+  private readonly puzzleFileInput = viewChild.required<ElementRef<HTMLInputElement>>('puzzleFileInput');
+  private readonly puzzlePreviewRef = viewChild.required<ElementRef<HTMLCanvasElement>>('puzzlePreview');
+  private readonly puzzleGameWrapperRef = viewChild.required<ElementRef<HTMLElement>>('puzzleGameWrapper');
 
   public readonly puzzleImageFolder = '/img/puzzles';
   public readonly puzzleThumbnailFolder = '/img/puzzle-thumbnails';
@@ -103,14 +103,14 @@ export class PuzzlePreviewComponent implements OnInit {
   private imageErrorTimeout?: number;
 
   public ngOnInit(): void {
-    this.puzzleFileInput.nativeElement.addEventListener('dragover', () => {
-      this.puzzleFileInput.nativeElement.classList.add('drop');
+    this.puzzleFileInput().nativeElement.addEventListener('dragover', () => {
+      this.puzzleFileInput().nativeElement.classList.add('drop');
     }, { passive: true });
-    this.puzzleFileInput.nativeElement.addEventListener('dragleave', () => {
-      this.puzzleFileInput.nativeElement.classList.remove('drop');
+    this.puzzleFileInput().nativeElement.addEventListener('dragleave', () => {
+      this.puzzleFileInput().nativeElement.classList.remove('drop');
     }, { passive: true });
-    this.puzzleFileInput.nativeElement.addEventListener('drop', () => {
-      this.puzzleFileInput.nativeElement.classList.remove('drop');
+    this.puzzleFileInput().nativeElement.addEventListener('drop', () => {
+      this.puzzleFileInput().nativeElement.classList.remove('drop');
     }, { passive: true });
 
     // Exec order :
@@ -147,7 +147,7 @@ export class PuzzlePreviewComponent implements OnInit {
     if (!file) {
       return;
     }
-    this.puzzleFileInput.nativeElement.value = '';
+    this.puzzleFileInput().nativeElement.value = '';
 
     if (file.size > (this.maxFileSize * 1024 * 1024)) {
       this.displayImageError('too-heavy');
@@ -176,7 +176,7 @@ export class PuzzlePreviewComponent implements OnInit {
 
     this.gameStarted.set(true);
     this.puzzleGame = new PuzzleGame(
-      this.puzzleGameWrapperRef.nativeElement,
+      this.puzzleGameWrapperRef().nativeElement,
       puzzleImage,
       this.puzzleOffset(),
       this.pieceSize(),
@@ -333,7 +333,7 @@ export class PuzzlePreviewComponent implements OnInit {
           return;
         }
         new PuzzlePreview(
-          this.puzzlePreviewRef.nativeElement,
+          this.puzzlePreviewRef().nativeElement,
           puzzleImage,
           this.puzzleOffset(),
           this.pieceSize(),

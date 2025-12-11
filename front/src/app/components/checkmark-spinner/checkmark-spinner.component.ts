@@ -1,6 +1,6 @@
 import type { ElementRef } from '@angular/core';
 
-import { Component, Input, ViewChild } from '@angular/core';
+import { Component, effect, input, viewChild } from '@angular/core';
 
 @Component({
   selector: 'app-checkmark-spinner',
@@ -12,27 +12,31 @@ export class CheckmarkSpinnerComponent {
 
   private static readonly MatrixRegExp = CheckmarkSpinnerComponent.getMatrixRegExp();
 
-  @ViewChild('host', { static: true }) public hostRef!: ElementRef<SVGElement>;
-  @ViewChild('spinner', { static: true }) public spinnerRef!: ElementRef<SVGElement>;
-  @ViewChild('arc', { static: true }) public arcRef!: ElementRef<SVGElement>;
+  public readonly hostRef = viewChild.required<ElementRef<SVGElement>>('host');
+  public readonly spinnerRef = viewChild.required<ElementRef<SVGElement>>('spinner');
+  public readonly arcRef = viewChild.required<ElementRef<SVGElement>>('arc');
+
+  public readonly complete = input.required<boolean>();
 
   private readonly minStopAnimationDuration = 400; // In milliseconds
   private readonly maxStopAnimationDuration = 1000; // In milliseconds
 
-  @Input()
-  public set complete(value: boolean) {
-    if (!value) {
-      this.restartSpinner();
-    }
-    else {
-      this.stopSpinner();
-    }
+  constructor() {
+    effect(() => {
+      if (!this.complete()) {
+        this.restartSpinner();
+      }
+      else {
+        this.stopSpinner();
+      }
+    });
   }
 
   private static getMatrixRegExp(): RegExp {
     const parameterValueRegex = '([^,]+)';
     const parameterSeparatorRegex = ',\\s*';
-    const sixParameterList = Array(6).fill(parameterValueRegex)
+    const sixParameterList = Array(6)
+      .fill(parameterValueRegex)
       .join(parameterSeparatorRegex);
     const matrixRegex = `matrix\\(${sixParameterList}\\)`;
     return new RegExp(matrixRegex, 'i');
@@ -42,9 +46,9 @@ export class CheckmarkSpinnerComponent {
     // Save the current spinner animation state,
     // compute the required angle to make the spinner's rotation stop at the beginning of the checkmark
     // and start the "complete" animation (spinner stop + checkmark drawing)
-    const spinnerComputedStyle = getComputedStyle(this.spinnerRef.nativeElement);
-    const arcComputedStyle = getComputedStyle(this.arcRef.nativeElement);
-    const radius = parseInt(this.arcRef.nativeElement.getAttribute('r') ?? '0', 10);
+    const spinnerComputedStyle = getComputedStyle(this.spinnerRef().nativeElement);
+    const arcComputedStyle = getComputedStyle(this.arcRef().nativeElement);
+    const radius = parseInt(this.arcRef().nativeElement.getAttribute('r') ?? '0', 10);
     const arcOffset = Math.abs(parseFloat(arcComputedStyle.strokeDashoffset.replace('px', '')));
     const currentSpinnerAngle = this.getRotationAngle(spinnerComputedStyle);
     const targetSpinnerAngle = parseFloat(spinnerComputedStyle.getPropertyValue('--target-angle'));
@@ -55,21 +59,21 @@ export class CheckmarkSpinnerComponent {
       targetArcAngle += 360;
     }
     const stopDuration = Math.min(Math.abs(targetArcAngle - currentArcAngle) / 360 * this.maxStopAnimationDuration, this.minStopAnimationDuration);
-    this.hostRef.nativeElement.style.setProperty('--stop-duration', `${stopDuration}ms`);
-    this.spinnerRef.nativeElement.style.setProperty('--transform', `rotate(${currentSpinnerAngle}deg)`);
-    this.arcRef.nativeElement.style.setProperty('--transform', `rotate(${currentArcAngle}deg)`);
-    this.arcRef.nativeElement.style.setProperty('--target-transform', `rotate(${targetArcAngle}deg)`);
-    this.arcRef.nativeElement.style.setProperty('--stroke-dasharray', arcComputedStyle.strokeDasharray);
-    this.arcRef.nativeElement.style.setProperty('--stroke-dashoffset', arcComputedStyle.strokeDashoffset);
-    this.hostRef.nativeElement.classList.add('complete');
+    this.hostRef().nativeElement.style.setProperty('--stop-duration', `${stopDuration}ms`);
+    this.spinnerRef().nativeElement.style.setProperty('--transform', `rotate(${currentSpinnerAngle}deg)`);
+    this.arcRef().nativeElement.style.setProperty('--transform', `rotate(${currentArcAngle}deg)`);
+    this.arcRef().nativeElement.style.setProperty('--target-transform', `rotate(${targetArcAngle}deg)`);
+    this.arcRef().nativeElement.style.setProperty('--stroke-dasharray', arcComputedStyle.strokeDasharray);
+    this.arcRef().nativeElement.style.setProperty('--stroke-dashoffset', arcComputedStyle.strokeDashoffset);
+    this.hostRef().nativeElement.classList.add('complete');
   }
 
   private restartSpinner(): void {
-    this.spinnerRef.nativeElement.style.removeProperty('--transform');
-    this.arcRef.nativeElement.style.removeProperty('--transform');
-    this.arcRef.nativeElement.style.removeProperty('--stroke-dasharray');
-    this.arcRef.nativeElement.style.removeProperty('--stroke-dashoffset');
-    this.hostRef.nativeElement.classList.remove('complete');
+    this.spinnerRef().nativeElement.style.removeProperty('--transform');
+    this.arcRef().nativeElement.style.removeProperty('--transform');
+    this.arcRef().nativeElement.style.removeProperty('--stroke-dasharray');
+    this.arcRef().nativeElement.style.removeProperty('--stroke-dashoffset');
+    this.hostRef().nativeElement.classList.remove('complete');
   }
 
   private getRotationAngle(style: CSSStyleDeclaration): number {
