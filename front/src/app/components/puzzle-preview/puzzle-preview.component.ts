@@ -34,7 +34,7 @@ type ImageError = 'unknown' | 'too-heavy' | 'too-small' | 'too-big' | 'file-read
 @Component({
   selector: 'app-puzzle-preview',
   templateUrl: './puzzle-preview.component.html',
-  styleUrls: ['./puzzle-preview.component.scss'],
+  styleUrl: './puzzle-preview.component.scss',
   imports: [FormsModule, CheckmarkSpinnerComponent],
 })
 export class PuzzlePreviewComponent implements OnInit {
