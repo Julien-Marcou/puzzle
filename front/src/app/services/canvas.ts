@@ -21,7 +21,7 @@ export class Canvas {
     return context;
   }
 
-  public static createPattern(context: CanvasRenderingContext2D, image: CanvasImageSource, repetition: Repetition = 'repeat'): CanvasPattern {
+  public static createPattern(context: OffscreenCanvasRenderingContext2D, image: CanvasImageSource, repetition: Repetition = 'repeat'): CanvasPattern {
     const pattern = context.createPattern(image, repetition);
     if (!pattern) {
       throw new Error('Could not create the pattern from the source image');

@@ -20,12 +20,12 @@ export class PuzzlePreview {
   private readonly puzzleWidth: number;
   private readonly puzzleHeight: number;
   private readonly context: CanvasRenderingContext2D;
-  private readonly middlePatternCanvas: HTMLCanvasElement;
-  private readonly horizontalPatternCanvas: HTMLCanvasElement;
-  private readonly verticalPatternCanvas: HTMLCanvasElement;
-  private readonly middlePatternContext: CanvasRenderingContext2D;
-  private readonly horizontalPatternContext: CanvasRenderingContext2D;
-  private readonly verticalPatternContext: CanvasRenderingContext2D;
+  private readonly middlePatternCanvas: OffscreenCanvas;
+  private readonly horizontalPatternCanvas: OffscreenCanvas;
+  private readonly verticalPatternCanvas: OffscreenCanvas;
+  private readonly middlePatternContext: OffscreenCanvasRenderingContext2D;
+  private readonly horizontalPatternContext: OffscreenCanvasRenderingContext2D;
+  private readonly verticalPatternContext: OffscreenCanvasRenderingContext2D;
 
   constructor(
     private readonly canvas: HTMLCanvasElement,
@@ -55,18 +55,12 @@ export class PuzzlePreview {
     this.canvas.height = this.imageHeight;
     this.context = Canvas.getContext2D(this.canvas);
 
-    this.horizontalPatternCanvas = document.createElement('canvas');
-    this.verticalPatternCanvas = document.createElement('canvas');
-    this.middlePatternCanvas = document.createElement('canvas');
-    this.horizontalPatternCanvas.width = this.pieceSize;
-    this.horizontalPatternCanvas.height = this.pieceSize;
-    this.verticalPatternCanvas.width = this.pieceSize;
-    this.verticalPatternCanvas.height = this.pieceSize;
-    this.middlePatternCanvas.width = this.pieceSize;
-    this.middlePatternCanvas.height = this.pieceSize;
-    this.horizontalPatternContext = Canvas.getContext2D(this.horizontalPatternCanvas);
-    this.verticalPatternContext = Canvas.getContext2D(this.verticalPatternCanvas);
-    this.middlePatternContext = Canvas.getContext2D(this.middlePatternCanvas);
+    this.horizontalPatternCanvas = new OffscreenCanvas(this.pieceSize, this.pieceSize);
+    this.verticalPatternCanvas = new OffscreenCanvas(this.pieceSize, this.pieceSize);
+    this.middlePatternCanvas = new OffscreenCanvas(this.pieceSize, this.pieceSize);
+    this.horizontalPatternContext = Canvas.getOffscreenContext2D(this.horizontalPatternCanvas);
+    this.verticalPatternContext = Canvas.getOffscreenContext2D(this.verticalPatternCanvas);
+    this.middlePatternContext = Canvas.getOffscreenContext2D(this.middlePatternCanvas);
 
     this.drawPatterns();
     this.draw();
