@@ -51,12 +51,7 @@
             ],
             "styles": [
               "src/styles.scss"
-            ],
-            "polyfills": [
-              "src/zone-flags.ts",
-              "zone.js"
-            ],
-            "scripts": []
+            ]
           },
           "configurations": {
             "production": {

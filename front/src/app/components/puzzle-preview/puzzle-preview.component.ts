@@ -2,7 +2,7 @@ import type { AbortablePromise } from '../../models/abortable-promise';
 import type { Point } from '../../models/geometry';
 import type { ElementRef, OnInit } from '@angular/core';
 
-import { Component, ViewChild } from '@angular/core';
+import { Component, signal, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { AXIS_TO_DIMENSION, VALID_AXES } from '../../models/geometry';
@@ -72,19 +72,19 @@ export class PuzzlePreviewComponent implements OnInit {
     'tiger-by-pexels.jpg',
   ];
 
-  public puzzleImage?: ImageBitmap;
-  public selectedPuzzle?: string;
-  public loadingPuzzle?: string;
-  public selectedCustomPuzzle?: string;
-  public loadingCustomPuzzle?: string;
-  public selectedPieceSizeIndex = 1;
-  public validPieceSizes: number[] = [50, 100, 200, 400, 500];
-  public puzzleOffset: Point = { x: 0, y: 0 };
-  public pieceSize = 100;
-  public horizontalPieceCount = 10;
-  public verticalPieceCount = 10;
-  public gameStarted = false;
-  public imageError?: ImageError;
+  public puzzleImage = signal<ImageBitmap | null>(null);
+  public selectedPuzzle = signal<string | null>(null);
+  public loadingPuzzle = signal<string | null>(null);
+  public selectedCustomPuzzle = signal<string | null>(null);
+  public loadingCustomPuzzle = signal<string | null>(null);
+  public selectedPieceSizeIndex = signal<number>(1);
+  public validPieceSizes = signal<number[]>([50, 100, 200, 400, 500]);
+  public puzzleOffset = signal<Point>({ x: 0, y: 0 });
+  public pieceSize = signal<number>(100);
+  public horizontalPieceCount = signal<number>(10);
+  public verticalPieceCount = signal<number>(10);
+  public gameStarted = signal<boolean>(false);
+  public imageError = signal<ImageError | null>(null);
 
   protected readonly maxFileSize = 15; // In Megabytes
   protected readonly minPuzzleImageWidth = 450; // In pixels
@@ -129,16 +129,16 @@ export class PuzzlePreviewComponent implements OnInit {
     if (this.imageErrorTimeout) {
       window.clearTimeout(this.imageErrorTimeout);
     }
-    this.imageError = undefined;
+    this.imageError.set(null);
   }
 
   public async setPuzzle(puzzleImageUrl: string): Promise<void> {
-    this.loadingPuzzle = puzzleImageUrl;
+    this.loadingPuzzle.set(puzzleImageUrl);
     const updated = await this.updatePuzzleImage(ImageLoader.loadFromUrl(`${this.puzzleImageFolder}/${puzzleImageUrl}`));
-    this.loadingPuzzle = undefined;
+    this.loadingPuzzle.set(null);
     if (updated) {
-      this.selectedPuzzle = puzzleImageUrl;
-      this.selectedCustomPuzzle = undefined;
+      this.selectedPuzzle.set(puzzleImageUrl);
+      this.selectedCustomPuzzle.set(null);
     }
   }
 
@@ -154,33 +154,34 @@ export class PuzzlePreviewComponent implements OnInit {
       return;
     }
 
-    this.loadingCustomPuzzle = file.name;
+    this.loadingCustomPuzzle.set(file.name);
     const updated = await this.updatePuzzleImage(ImageLoader.loadFromFile(file));
-    this.loadingCustomPuzzle = undefined;
+    this.loadingCustomPuzzle.set(null);
     if (updated) {
-      this.selectedPuzzle = undefined;
-      this.selectedCustomPuzzle = file.name;
+      this.selectedPuzzle.set(null);
+      this.selectedCustomPuzzle.set(file.name);
     }
   }
 
   public async updatePieceSize(): Promise<void> {
-    this.pieceSize = this.validPieceSizes[this.selectedPieceSizeIndex];
+    this.pieceSize.set(this.validPieceSizes()[this.selectedPieceSizeIndex()]);
     await this.updatePuzzleSize();
   }
 
   public async startPuzzle(): Promise<void> {
-    if (!this.puzzleImage) {
+    const puzzleImage = this.puzzleImage();
+    if (!puzzleImage) {
       return;
     }
 
-    this.gameStarted = true;
+    this.gameStarted.set(true);
     this.puzzleGame = new PuzzleGame(
       this.puzzleGameWrapperRef.nativeElement,
-      this.puzzleImage,
-      this.puzzleOffset,
-      this.pieceSize,
-      this.horizontalPieceCount,
-      this.verticalPieceCount,
+      puzzleImage,
+      this.puzzleOffset(),
+      this.pieceSize(),
+      this.horizontalPieceCount(),
+      this.verticalPieceCount(),
     );
 
     // Wait one frame to make sure the canvas wrapper is rendered,
@@ -198,7 +199,7 @@ export class PuzzlePreviewComponent implements OnInit {
     if (this.puzzleGame) {
       this.puzzleGame.stop();
     }
-    this.gameStarted = false;
+    this.gameStarted.set(false);
   }
 
   public debugWebGL(): void {
@@ -215,17 +216,18 @@ export class PuzzlePreviewComponent implements OnInit {
     let success = false;
     this.imageLoading = imageLoading;
     try {
-      const puzzleImage = await imageLoading;
-      if (puzzleImage.width > this.maxPuzzleImageWidth || puzzleImage.height > this.maxPuzzleImageHeight) {
+      const newPuzzleImage = await imageLoading;
+      if (newPuzzleImage.width > this.maxPuzzleImageWidth || newPuzzleImage.height > this.maxPuzzleImageHeight) {
         throw new ImageTooBigError('The image is too big to be used');
       }
-      if (puzzleImage.width < this.minPuzzleImageWidth || puzzleImage.height < this.minPuzzleImageHeight) {
+      if (newPuzzleImage.width < this.minPuzzleImageWidth || newPuzzleImage.height < this.minPuzzleImageHeight) {
         throw new ImageTooSmallError('The image is too small to be used');
       }
-      if (this.puzzleImage) {
-        this.puzzleImage.close();
+      const currentPuzzleImage = this.puzzleImage();
+      if (currentPuzzleImage) {
+        currentPuzzleImage.close();
       }
-      this.puzzleImage = puzzleImage;
+      this.puzzleImage.set(newPuzzleImage);
       await this.updateValidPieceSizes();
       success = true;
     }
@@ -258,55 +260,58 @@ export class PuzzlePreviewComponent implements OnInit {
   }
 
   private async updateValidPieceSizes(): Promise<void> {
-    if (!this.puzzleImage) {
+    const puzzleImage = this.puzzleImage();
+    if (!puzzleImage) {
       return;
     }
     const minPieceSize = Math.max(
-      Math.floor(this.puzzleImage.width / this.maxPieceCountPerAxis),
-      Math.floor(this.puzzleImage.height / this.maxPieceCountPerAxis),
+      Math.floor(puzzleImage.width / this.maxPieceCountPerAxis),
+      Math.floor(puzzleImage.height / this.maxPieceCountPerAxis),
       this.minPieceSizeConstraint,
     );
     const maxPieceSize = Math.min(
-      Math.floor(this.puzzleImage.width / this.minPieceCountPerAxis),
-      Math.floor(this.puzzleImage.height / this.minPieceCountPerAxis),
+      Math.floor(puzzleImage.width / this.minPieceCountPerAxis),
+      Math.floor(puzzleImage.height / this.minPieceCountPerAxis),
       this.maxPieceSizeConstraint,
     );
 
-    this.validPieceSizes = [];
+    const validPieceSizes = [];
     for (const axis of VALID_AXES) {
-      const puzzleDimension = this.puzzleImage[AXIS_TO_DIMENSION[axis]];
+      const puzzleDimension = puzzleImage[AXIS_TO_DIMENSION[axis]];
       const minPieceCount = Math.floor(puzzleDimension / maxPieceSize);
       const maxPieceCount = Math.floor(puzzleDimension / minPieceSize);
       for (let pieceCount = minPieceCount; pieceCount <= maxPieceCount; pieceCount++) {
         const pieceSize = Math.max(minPieceSize, Math.min(maxPieceSize, Math.floor(puzzleDimension / pieceCount)));
-        const pieceSizeIndex = this.validPieceSizes.findIndex((validPieceSize) => validPieceSize <= pieceSize);
+        const pieceSizeIndex = validPieceSizes.findIndex((validPieceSize) => validPieceSize <= pieceSize);
         // Add values in descending order (from the biggest piece to the smallest piece)
         // So the range input is going from the smallest to the biggest number of pieces
         if (pieceSizeIndex === -1) {
-          this.validPieceSizes.push(pieceSize);
+          validPieceSizes.push(pieceSize);
         }
-        else if (this.validPieceSizes[pieceSizeIndex] !== pieceSize) {
-          this.validPieceSizes.splice(pieceSizeIndex, 0, pieceSize);
+        else if (validPieceSizes[pieceSizeIndex] !== pieceSize) {
+          validPieceSizes.splice(pieceSizeIndex, 0, pieceSize);
         }
       }
     }
 
-    this.selectedPieceSizeIndex = Math.floor(this.validPieceSizes.length / 4);
+    this.validPieceSizes.set(validPieceSizes);
+    this.selectedPieceSizeIndex.set(Math.floor(this.validPieceSizes().length / 4));
     await this.updatePieceSize();
   }
 
   private async updatePuzzleSize(): Promise<void> {
-    if (!this.puzzleImage) {
+    const puzzleImage = this.puzzleImage();
+    if (!puzzleImage) {
       return;
     }
-    this.horizontalPieceCount = Math.floor(this.puzzleImage.width / this.pieceSize);
-    this.verticalPieceCount = Math.floor(this.puzzleImage.height / this.pieceSize);
-    const puzzleWidth = this.horizontalPieceCount * this.pieceSize;
-    const puzzleHeight = this.verticalPieceCount * this.pieceSize;
-    this.puzzleOffset = {
-      x: Math.floor((this.puzzleImage.width - puzzleWidth) / 2),
-      y: Math.floor((this.puzzleImage.height - puzzleHeight) / 2),
-    };
+    this.horizontalPieceCount.set(Math.floor(puzzleImage.width / this.pieceSize()));
+    this.verticalPieceCount.set(Math.floor(puzzleImage.height / this.pieceSize()));
+    const puzzleWidth = this.horizontalPieceCount() * this.pieceSize();
+    const puzzleHeight = this.verticalPieceCount() * this.pieceSize();
+    this.puzzleOffset.set({
+      x: Math.floor((puzzleImage.width - puzzleWidth) / 2),
+      y: Math.floor((puzzleImage.height - puzzleHeight) / 2),
+    });
     await this.updatePuzzlePreview();
   }
 
@@ -323,16 +328,17 @@ export class PuzzlePreviewComponent implements OnInit {
         // so that cancelling a new puzzle image loading and immediatly loading another one
         // will guarantee that that the first one will not render after the second one
         this.renderingPreview = false;
-        if (!this.puzzleImage) {
+        const puzzleImage = this.puzzleImage();
+        if (!puzzleImage) {
           return;
         }
         new PuzzlePreview(
           this.puzzlePreviewRef.nativeElement,
-          this.puzzleImage,
-          this.puzzleOffset,
-          this.pieceSize,
-          this.horizontalPieceCount,
-          this.verticalPieceCount,
+          puzzleImage,
+          this.puzzleOffset(),
+          this.pieceSize(),
+          this.horizontalPieceCount(),
+          this.verticalPieceCount(),
         );
         resolve();
       });
@@ -343,10 +349,10 @@ export class PuzzlePreviewComponent implements OnInit {
     if (this.imageErrorTimeout) {
       window.clearTimeout(this.imageErrorTimeout);
     }
-    this.imageError = error;
+    this.imageError.set(error);
     this.imageErrorTimeout = window.setTimeout(() => {
       this.imageErrorTimeout = undefined;
-      this.imageError = undefined;
+      this.imageError.set(null);
     }, this.imageErrorDelay);
   }
 
