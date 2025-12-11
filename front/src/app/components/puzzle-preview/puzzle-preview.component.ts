@@ -105,13 +105,13 @@ export class PuzzlePreviewComponent implements OnInit {
   public ngOnInit(): void {
     this.puzzleFileInput.nativeElement.addEventListener('dragover', () => {
       this.puzzleFileInput.nativeElement.classList.add('drop');
-    });
+    }, { passive: true });
     this.puzzleFileInput.nativeElement.addEventListener('dragleave', () => {
       this.puzzleFileInput.nativeElement.classList.remove('drop');
-    });
+    }, { passive: true });
     this.puzzleFileInput.nativeElement.addEventListener('drop', () => {
       this.puzzleFileInput.nativeElement.classList.remove('drop');
-    });
+    }, { passive: true });
 
     // Exec order :
     // - load puzzle image

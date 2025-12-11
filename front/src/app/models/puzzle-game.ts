@@ -706,7 +706,7 @@ export class PuzzleGame {
           startViewportPinching();
         }
       }
-    });
+    }, { passive: true });
 
     this.canvas.addEventListener('pointerup', (event) => {
       if (!isPointerCaptured(event)) {
@@ -740,7 +740,7 @@ export class PuzzleGame {
           startViewportPinching();
         }
       }
-    });
+    }, { passive: true });
 
     this.canvas.addEventListener('pointermove', (event) => {
       movePointerEvent(event);
@@ -758,18 +758,18 @@ export class PuzzleGame {
           computePinchToZoom();
         }
       }
-    });
+    }, { passive: true });
 
     this.canvas.addEventListener('pointerleave', () => {
       releasePieceHover();
-    });
+    }, { passive: true });
 
     this.canvas.addEventListener('wheel', (event: WheelEvent) => {
       if (this.viewportState === ViewportState.Manipulation) {
         return;
       }
       viewportWheelZoom(event);
-    });
+    }, { passive: true });
   }
 
   private getPieceGroupAt(point: Point): PieceGroup | undefined {
