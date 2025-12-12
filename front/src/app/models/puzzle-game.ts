@@ -165,7 +165,7 @@ export class PuzzleGame {
 
       // Waiting for piece sprites to be ready
       const spritesheet = await this.buildSpritesheet();
-      this.addPieces(spritesheet);
+      await this.addPieces(spritesheet);
 
       // Switch from loading text to puzzle view
       this.viewportContainer.visible = true;
@@ -339,7 +339,7 @@ export class PuzzleGame {
     this.viewportContainer.y = offsetY;
   }
 
-  private addPieces(spritesheet: PuzzleSpritesheet): void {
+  private async addPieces(spritesheet: PuzzleSpritesheet): Promise<void> {
     const puzzleTexture = new ImageSource({
       resource: spritesheet.image,
       autoGenerateMipmaps: true,
@@ -350,6 +350,7 @@ export class PuzzleGame {
       sampleCount: 8,
       antialias: true,
     });
+    await this.application.renderer.prepare.upload(puzzleTexture);
 
     for (let x = 0; x < this.horizontalPieceCount; x++) {
       const pieceColumn = [];
