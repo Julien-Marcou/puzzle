@@ -3,7 +3,7 @@ import type { PuzzleSpritesheet } from './puzzle-spritesheet';
 import type { PuzzleSpritesheetParameters } from './puzzle-spritesheet-parameters';
 
 import { isDevMode } from '@angular/core';
-import { AbstractRenderer, Application, Container, Graphics, Text, WebGLRenderer, WebGPURenderer } from 'pixi.js';
+import { AbstractRenderer, Application, Container, Graphics, ImageSource, Text, WebGLRenderer, WebGPURenderer } from 'pixi.js';
 
 import { PieceShape } from './piece-shape';
 import { environment } from '../../environments/environment';
@@ -340,12 +340,24 @@ export class PuzzleGame {
   }
 
   private addPieces(spritesheet: PuzzleSpritesheet): void {
+    const puzzleTexture = new ImageSource({
+      resource: spritesheet.image,
+      autoGenerateMipmaps: true,
+      resolution: 1,
+      minFilter: 'linear',
+      magFilter: 'linear',
+      mipmapFilter: 'linear',
+      sampleCount: 8,
+      antialias: true,
+    });
+
     for (let x = 0; x < this.horizontalPieceCount; x++) {
       const pieceColumn = [];
       for (let y = 0; y < this.verticalPieceCount; y++) {
         const pieceSprite = new PieceSprite(
           { x, y },
-          spritesheet.sprites[x][y],
+          this.pieceSpriteSize,
+          puzzleTexture,
           spritesheet.alphaChannels[x][y],
         );
         const pieceGroup = new PieceGroup();

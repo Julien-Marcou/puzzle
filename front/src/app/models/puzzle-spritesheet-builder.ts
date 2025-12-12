@@ -68,23 +68,31 @@ export class PuzzleSpritesheetBuilder {
     return pieceShapeMatrix;
   }
 
-  public async build(): Promise<PuzzleSpritesheet> {
-    const sprites = Array.from(Array(this.parameters.horizontalPieceCount), () => Array<ImageBitmap>(this.parameters.verticalPieceCount));
-    const alphaChannels = Array.from(Array(this.parameters.horizontalPieceCount), () => new Array<Uint8ClampedArray[]>(this.parameters.verticalPieceCount));
+  public build(): PuzzleSpritesheet {
+    const spritesheetWidth = this.parameters.pieceSpriteSize * this.parameters.horizontalPieceCount;
+    const spritesheetHeight = this.parameters.pieceSpriteSize * this.parameters.verticalPieceCount;
+
+    const spritesheetCanvas = new OffscreenCanvas(spritesheetWidth, spritesheetHeight);
+    const spritesheetContext = Canvas.getOffscreenContext2D(spritesheetCanvas);
+
+    // build sprite for each pieces
+    const spriteCanvas = new OffscreenCanvas(this.parameters.pieceSpriteSize, this.parameters.pieceSpriteSize);
+    const spriteContext = Canvas.getOffscreenContext2D(spriteCanvas);
+
     for (let x = 0; x < this.parameters.horizontalPieceCount; x++) {
       for (let y = 0; y < this.parameters.verticalPieceCount; y++) {
         const pieceShape = this.pieceShapeMatrix[x][y];
-        const pieceCanvas = new OffscreenCanvas(this.parameters.pieceSpriteSize, this.parameters.pieceSpriteSize);
-        const pieceContext = Canvas.getOffscreenContext2D(pieceCanvas);
+
+        spriteContext.reset();
 
         // outline for better "piece to piece" fit
-        pieceContext.strokeStyle = PieceShape.Parameters.strokeColor;
-        pieceContext.lineWidth = PieceShape.Parameters.strokeThickness;
-        pieceContext.stroke(pieceShape.path);
+        spriteContext.strokeStyle = PieceShape.Parameters.strokeColor;
+        spriteContext.lineWidth = PieceShape.Parameters.strokeThickness;
+        spriteContext.stroke(pieceShape.path);
 
         // build piece image
-        pieceContext.clip(pieceShape.path);
-        pieceContext.drawImage(
+        spriteContext.clip(pieceShape.path);
+        spriteContext.drawImage(
           this.parameters.image,
           -this.parameters.pieceMargin + pieceShape.x + this.parameters.imageOffset.x,
           -this.parameters.pieceMargin + pieceShape.y + this.parameters.imageOffset.y,
@@ -95,24 +103,44 @@ export class PuzzleSpritesheetBuilder {
           this.parameters.pieceSpriteSize,
           this.parameters.pieceSpriteSize,
         );
-        sprites[x][y] = await createImageBitmap(pieceCanvas);
-
-        // build piece alpha channel
-        const bytePerPixel = 4;
-        const alphaChannelOffset = 3;
-        const pixels = pieceContext.getImageData(0, 0, this.parameters.pieceSpriteSize, this.parameters.pieceSpriteSize).data;
-        const alphaChannel = Array.from(Array(this.parameters.pieceSpriteSize), () => new Uint8ClampedArray(this.parameters.pieceSpriteSize));
-        for (let pixelX = 0; pixelX < this.parameters.pieceSpriteSize; pixelX++) {
-          for (let pixelY = 0; pixelY < this.parameters.pieceSpriteSize; pixelY++) {
-            const pixelIndex = (pixelX + pixelY * this.parameters.pieceSpriteSize) * bytePerPixel;
-            alphaChannel[pixelX][pixelY] = pixels[pixelIndex + alphaChannelOffset];
-          }
-        }
-        alphaChannels[x][y] = alphaChannel;
+        spritesheetContext.drawImage(spriteCanvas, x * this.parameters.pieceSpriteSize, y * this.parameters.pieceSpriteSize);
       }
     }
 
-    return { sprites, alphaChannels };
+    // build piece alpha channels for each pieces
+    const bytePerPixel = 4;
+    const alphaChannelOffset = 3;
+    const spritesheetPixels = spritesheetContext.getImageData(0, 0, spritesheetWidth, spritesheetHeight).data;
+
+    const alphaChannels = Array.from(
+      Array(this.parameters.horizontalPieceCount),
+      () => Array.from(
+        Array<Uint8ClampedArray[]>(this.parameters.verticalPieceCount),
+        () => Array.from(
+          Array(this.parameters.pieceSpriteSize),
+          () => new Uint8ClampedArray(this.parameters.pieceSpriteSize),
+        ),
+      ),
+    );
+
+    for (let x = 0; x < this.parameters.horizontalPieceCount; x++) {
+      for (let y = 0; y < this.parameters.verticalPieceCount; y++) {
+        const spriteOriginX = x * this.parameters.pieceSpriteSize;
+        const spriteOriginY = y * this.parameters.pieceSpriteSize;
+
+        for (let spritePixelX = 0; spritePixelX < this.parameters.pieceSpriteSize; spritePixelX++) {
+          for (let spritePixelY = 0; spritePixelY < this.parameters.pieceSpriteSize; spritePixelY++) {
+            const spritesheetPixelX = spriteOriginX + spritePixelX;
+            const spritesheetPixelY = spriteOriginY + spritePixelY;
+
+            const pixelIndex = (spritesheetPixelX + spritesheetPixelY * spritesheetWidth) * bytePerPixel;
+            alphaChannels[x][y][spritePixelX][spritePixelY] = spritesheetPixels[pixelIndex + alphaChannelOffset];
+          }
+        }
+      }
+    }
+
+    return { image: spritesheetCanvas.transferToImageBitmap(), alphaChannels };
   }
 
 }
