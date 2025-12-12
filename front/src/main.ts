@@ -10,6 +10,7 @@ import 'pixi.js/text';
 import 'pixi.js/graphics';
 
 AbstractRenderer.defaultOptions.resolution = Math.max(1, window.devicePixelRatio);
+AbstractRenderer.defaultOptions.roundPixels = true;
 
 bootstrapApplication(AppComponent, APP_CONFIG).catch((error: unknown) => {
   console.error(error);
