@@ -20,6 +20,7 @@ export class PuzzleGame {
   private readonly puzzleBackgroundColor = 0x1a1918;
   private readonly gamePadding = 40;
   private readonly gameBorderThickness = 3;
+  private readonly minimumPieceSnappingMargin = 18;
 
   private readonly puzzleWidth: number;
   private readonly puzzleHeight: number;
@@ -104,10 +105,7 @@ export class PuzzleGame {
       x: Math.round((this.playableAreaWidth - this.puzzleWidth) / 2),
       y: Math.round((this.playableAreaHeight - this.puzzleHeight) / 2),
     };
-    this.pieceSnappingMargin = Math.ceil(this.pieceSize / 4);
-    if (this.pieceSnappingMargin < 18) {
-      this.pieceSnappingMargin = 18;
-    }
+    this.pieceSnappingMargin = Math.max(this.minimumPieceSnappingMargin, Math.ceil(this.pieceSize / 3.5));
 
     this.canvas = document.createElement('canvas');
     this.canvas.classList.add('pixijs-canvas');
