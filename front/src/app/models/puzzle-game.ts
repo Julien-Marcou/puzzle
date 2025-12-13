@@ -1,5 +1,5 @@
 import type { Point } from './geometry';
-import type { PointerId, Pointer, PinchToZoomInitialState, ViewportDragInitialState, PieceGroupDragInitialState, GroupSnapping } from './puzzle-manipulation';
+import type { PointerId, Pointer, PinchToZoomInitialState, ViewportDragInitialState, PieceGroupDragInitialState, GroupSnapping, PuzzleEventListeners } from './puzzle-manipulation';
 import type { PuzzleSpritesheet } from './puzzle-spritesheet';
 import type { PuzzleSpritesheetParameters } from './puzzle-spritesheet-parameters';
 
@@ -46,6 +46,27 @@ export class PuzzleGame {
   private initalViewportDrag?: ViewportDragInitialState;
   private hoveredPieceGroup?: PieceGroup;
   private initialPieceGroupDrag?: PieceGroupDragInitialState;
+
+  private readonly eventListeners: PuzzleEventListeners = {
+    pointerdown: (event) => {
+      this.startPointerDrag(event);
+    },
+    pointerup: (event) => {
+      this.stopPointerDrag(event);
+    },
+    pointercancel: (event) => {
+      this.stopPointerDrag(event);
+    },
+    pointermove: (event) => {
+      this.computePointerMove(event);
+    },
+    pointerleave: () => {
+      this.releasePieceHover();
+    },
+    wheel: (event) => {
+      this.computeWheelZoom(event);
+    },
+  };
 
   constructor(
     private readonly wrapper: HTMLElement,
@@ -152,6 +173,7 @@ export class PuzzleGame {
   public stop(): void {
     try {
       this.resizeObserver.disconnect();
+      this.stopGameEventListeners();
       this.application.stop();
       this.application.destroy(true, true);
     }
@@ -420,29 +442,21 @@ export class PuzzleGame {
   }
 
   private startGameEventListeners(): void {
-    this.canvas.addEventListener('pointerdown', (event) => {
-      this.startPointerDrag(event);
-    }, { passive: true });
+    this.canvas.addEventListener('pointerdown', this.eventListeners.pointerdown, { passive: true });
+    this.canvas.addEventListener('pointerup', this.eventListeners.pointerup, { passive: true });
+    this.canvas.addEventListener('pointercancel', this.eventListeners.pointercancel, { passive: true });
+    this.canvas.addEventListener('pointermove', this.eventListeners.pointermove, { passive: true });
+    this.canvas.addEventListener('pointerleave', this.eventListeners.pointerleave, { passive: true });
+    this.canvas.addEventListener('wheel', this.eventListeners.wheel, { passive: true });
+  }
 
-    this.canvas.addEventListener('pointerup', (event) => {
-      this.stopPointerDrag(event);
-    }, { passive: true });
-
-    this.canvas.addEventListener('pointercancel', (event) => {
-      this.stopPointerDrag(event);
-    }, { passive: true });
-
-    this.canvas.addEventListener('pointermove', (event) => {
-      this.computePointerMove(event);
-    }, { passive: true });
-
-    this.canvas.addEventListener('pointerleave', () => {
-      this.releasePieceHover();
-    }, { passive: true });
-
-    this.canvas.addEventListener('wheel', (event: WheelEvent) => {
-      this.computeWheelZoom(event);
-    }, { passive: true });
+  private stopGameEventListeners(): void {
+    this.canvas.removeEventListener('pointerdown', this.eventListeners.pointerdown);
+    this.canvas.removeEventListener('pointerup', this.eventListeners.pointerup);
+    this.canvas.removeEventListener('pointercancel', this.eventListeners.pointercancel);
+    this.canvas.removeEventListener('pointermove', this.eventListeners.pointermove);
+    this.canvas.removeEventListener('pointerleave', this.eventListeners.pointerleave);
+    this.canvas.removeEventListener('wheel', this.eventListeners.wheel);
   }
 
   private isPointerCaptured(event: PointerEvent): boolean {

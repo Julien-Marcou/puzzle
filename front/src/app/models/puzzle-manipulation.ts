@@ -44,3 +44,12 @@ export const enum ManipulationType {
   Pan = 'pan',
   Pinch = 'pinch',
 }
+
+export type PuzzleEventListeners = {
+  pointerdown: (event: PointerEvent) => void;
+  pointerup: (event: PointerEvent) => void;
+  pointercancel: (event: PointerEvent) => void;
+  pointermove: (event: PointerEvent) => void;
+  pointerleave: (event: PointerEvent) => void;
+  wheel: (event: WheelEvent) => void;
+};
