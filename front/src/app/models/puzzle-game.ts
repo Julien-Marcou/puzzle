@@ -1,4 +1,5 @@
 import type { Point } from './geometry';
+import type { PointerId, Pointer, PinchToZoomInitialState, ViewportDragInitialState, PieceGroupDragInitialState, GroupSnapping } from './puzzle-manipulation';
 import type { PuzzleSpritesheet } from './puzzle-spritesheet';
 import type { PuzzleSpritesheetParameters } from './puzzle-spritesheet-parameters';
 
@@ -6,48 +7,11 @@ import { isDevMode } from '@angular/core';
 import { AbstractRenderer, Application, Container, Graphics, ImageSource, Text, WebGLRenderer, WebGPURenderer } from 'pixi.js';
 
 import { PieceShape } from './piece-shape';
+import { ViewportState, ManipulationType } from './puzzle-manipulation';
 import { environment } from '../../environments/environment';
 import { FpsGraph } from '../display-objects/fps-graph';
 import { PieceGroup } from '../display-objects/piece-group';
 import { PieceSprite } from '../display-objects/piece-sprite';
-
-type GroupSnapping = {
-  pieceGroup: PieceGroup;
-  snapPosition: Point;
-};
-
-type PointerId = number;
-type Pointer = {
-  id: PointerId;
-  origin: Point;
-  position: Point;
-  timestamp: number;
-};
-type PinchToZoomInitialState = {
-  pinchOrigin: Point;
-  meanDistance: number;
-  viewportOrigin: Point;
-  viewportScale: number;
-  pointerCount: number;
-};
-type ViewportDragInitialState = {
-  dragOrigin: Point;
-  viewportOrigin: Point;
-};
-type PieceGroupDragInitialState = {
-  pieceGroup: PieceGroup;
-  dragOrigin: Point;
-  pieceOrigin: Point;
-};
-const enum ViewportState {
-  Manipulation = 'manipulation',
-  Interaction = 'interaction',
-  Idle = 'idle',
-}
-const enum ManipulationType {
-  Pan = 'pan',
-  Pinch = 'pinch',
-}
 
 export class PuzzleGame {
 
@@ -301,44 +265,6 @@ export class PuzzleGame {
     return await promise;
   }
 
-  private drawBorder(scale: number): void {
-    const borderThickness = this.gameBorderThickness / scale;
-    this.border.clear();
-    this.border.rect(0, 0, this.playableAreaWidth, this.playableAreaHeight).stroke({
-      width: borderThickness,
-      color: this.puzzleBackgroundColor,
-      alignment: 0,
-    });
-  }
-
-  private updateViewportScale(targetScale: number): void {
-    this.viewportContainer.scale.set(targetScale);
-    this.drawBorder(targetScale);
-  }
-
-  private resize(): void {
-    this.application.renderer.resize(
-      this.wrapper.clientWidth,
-      this.wrapper.clientHeight,
-    );
-    this.fit();
-  }
-
-  private fit(): void {
-    const canvasWidth = this.canvas.clientWidth;
-    const canvasHeight = this.canvas.clientHeight;
-    const worldWidth = (this.playableAreaWidth + this.gamePadding * 2);
-    const worldHeight = (this.playableAreaHeight + this.gamePadding * 2);
-    const scaleX = canvasWidth / worldWidth * 0.9;
-    const scaleY = canvasHeight / worldHeight * 0.9;
-    const scale = Math.min(scaleX, scaleY);
-    this.updateViewportScale(scale);
-    const offsetX = Math.round((canvasWidth - worldWidth * scale) / 2);
-    const offsetY = Math.round((canvasHeight - worldHeight * scale) / 2);
-    this.viewportContainer.x = offsetX;
-    this.viewportContainer.y = offsetY;
-  }
-
   private async addPieces(spritesheet: PuzzleSpritesheet): Promise<void> {
     const puzzleTexture = new ImageSource({
       resource: spritesheet.image,
@@ -371,56 +297,316 @@ export class PuzzleGame {
     this.shufflePieces();
   }
 
-  private getClampedScale(targetScale: number): number {
-    const minScale = 0.04;
-    const maxScale = 1;
-    return Math.min(Math.max(targetScale, minScale), maxScale);
+  private shufflePieces(): void {
+    const remainingPieces = [...this.pieceContainer.children];
+    const horizontalSpriteCount = Math.floor(this.puzzleWidth / this.pieceSpriteSize);
+    const verticalSpriteCount = Math.floor(this.puzzleHeight / this.pieceSpriteSize);
+    const cellWidth = this.puzzleWidth / horizontalSpriteCount;
+    const cellHeight = this.puzzleHeight / verticalSpriteCount;
+    let horizontalCellCount = horizontalSpriteCount + 2;
+    let verticalCellCount = verticalSpriteCount;
+    let outlineIndex = 1;
+    let outlineCellIndex = 0;
+    while (remainingPieces.length > 0) {
+      // Compute current outline settings
+      const outlineOrigin = {
+        x: -outlineIndex * cellWidth,
+        y: -outlineIndex * cellHeight,
+      };
+      const leftSideLastIndex = verticalCellCount - 1;
+      const rightSideLastIndex = leftSideLastIndex + verticalCellCount;
+      const topSideLastIndex = rightSideLastIndex + horizontalCellCount;
+
+      // Compute the cell coordinates from its index on the outline, and following that order:
+      // - left side, top to bottom
+      // - right side, top to bottom
+      // - top side, left to right
+      // - bottom side, left to right
+      let cellCoordinate: Point;
+
+      // Left side
+      if (outlineCellIndex <= leftSideLastIndex) {
+        cellCoordinate = {
+          x: 0,
+          y: outlineCellIndex + 1,
+        };
+      }
+      // Right side
+      else if (outlineCellIndex <= rightSideLastIndex) {
+        cellCoordinate = {
+          x: horizontalCellCount - 1,
+          y: outlineCellIndex - leftSideLastIndex,
+        };
+      }
+      // Top side
+      else if (outlineCellIndex <= topSideLastIndex) {
+        cellCoordinate = {
+          x: outlineCellIndex - rightSideLastIndex - 1,
+          y: 0,
+        };
+      }
+      // Bottom side
+      else {
+        cellCoordinate = {
+          x: outlineCellIndex - topSideLastIndex - 1,
+          y: verticalCellCount + 1,
+        };
+      }
+
+      // Move a random piece to the current outline cell position
+      const pieceIndex = Math.floor(Math.random() * remainingPieces.length);
+      const piece = remainingPieces.splice(pieceIndex, 1)[0];
+      piece.x = Math.round(cellCoordinate.x * cellWidth + outlineOrigin.x + (cellWidth - piece.width) / 2);
+      piece.y = Math.round(cellCoordinate.y * cellHeight + outlineOrigin.y + (cellHeight - piece.height) / 2);
+
+      // Move to the next cell and wrap to the next outline if needed
+      outlineCellIndex++;
+      const outlineCellCount = (horizontalCellCount + verticalCellCount) * 2;
+      if (outlineCellIndex === outlineCellCount) {
+        outlineCellIndex = 0;
+        outlineIndex++;
+        horizontalCellCount += 2;
+        verticalCellCount += 2;
+      }
+    }
   }
 
-  private getClampedScaleFactor(currentScale: number, scaleFactor: number): number {
-    const targetScale = this.getClampedScale(currentScale * scaleFactor);
-    return targetScale / currentScale;
+  private movePieceToTop(pieceToMove: PieceGroup): void {
+    this.pieceContainer.removeChild(pieceToMove);
+    this.pieceContainer.addChild(pieceToMove);
   }
 
-  private getPointersCenter(): Point {
-    const pointerCount = this.capturedPointers.size;
-    const center = { x: 0, y: 0 };
-    this.capturedPointers.forEach((capturedPointer) => {
-      center.x += capturedPointer.position.x;
-      center.y += capturedPointer.position.y;
+  private movePieceToBottom(pieceToMove: PieceGroup): void {
+    this.pieceContainer.removeChild(pieceToMove);
+    this.pieceContainer.addChildAt(pieceToMove, 0);
+  }
+
+  private resize(): void {
+    this.application.renderer.resize(
+      this.wrapper.clientWidth,
+      this.wrapper.clientHeight,
+    );
+    this.fit();
+  }
+
+  private fit(): void {
+    const canvasWidth = this.canvas.clientWidth;
+    const canvasHeight = this.canvas.clientHeight;
+    const worldWidth = (this.playableAreaWidth + this.gamePadding * 2);
+    const worldHeight = (this.playableAreaHeight + this.gamePadding * 2);
+    const scaleX = canvasWidth / worldWidth * 0.9;
+    const scaleY = canvasHeight / worldHeight * 0.9;
+    const scale = Math.min(scaleX, scaleY);
+    this.updateViewportScale(scale);
+    const offsetX = Math.round((canvasWidth - worldWidth * scale) / 2);
+    const offsetY = Math.round((canvasHeight - worldHeight * scale) / 2);
+    this.viewportContainer.x = offsetX;
+    this.viewportContainer.y = offsetY;
+  }
+
+  private updateBorder(scale: number): void {
+    const borderThickness = this.gameBorderThickness / scale;
+    this.border.clear();
+    this.border.rect(0, 0, this.playableAreaWidth, this.playableAreaHeight).stroke({
+      width: borderThickness,
+      color: this.puzzleBackgroundColor,
+      alignment: 0,
     });
-    center.x /= pointerCount;
-    center.y /= pointerCount;
-    return center;
   }
 
-  private getPointersMeanDistanceTo(point: Point): number {
-    const pointerCount = this.capturedPointers.size;
-    let meanDistance = 0;
-    this.capturedPointers.forEach((capturedPointer) => {
-      meanDistance += Math.hypot(
-        capturedPointer.position.x - point.x,
-        capturedPointer.position.y - point.y,
-      );
+  private updateViewportScale(targetScale: number): void {
+    this.viewportContainer.scale.set(targetScale);
+    this.updateBorder(targetScale);
+  }
+
+  private startGameEventListeners(): void {
+    this.canvas.addEventListener('pointerdown', (event) => {
+      this.startPointerDrag(event);
+    }, { passive: true });
+
+    this.canvas.addEventListener('pointerup', (event) => {
+      this.stopPointerDrag(event);
+    }, { passive: true });
+
+    this.canvas.addEventListener('pointermove', (event) => {
+      this.computePointerMove(event);
+    }, { passive: true });
+
+    this.canvas.addEventListener('pointerleave', () => {
+      this.releasePieceHover();
+    }, { passive: true });
+
+    this.canvas.addEventListener('wheel', (event: WheelEvent) => {
+      this.computeWheelZoom(event);
+    }, { passive: true });
+  }
+
+  private isPointerCaptured(event: PointerEvent): boolean {
+    return this.capturedPointers.has(event.pointerId);
+  }
+
+  private isLeftOrMiddleClick(event: PointerEvent): boolean {
+    return event.button === 0 || event.button === 1;
+  }
+
+  private capturePointerEvent(event: PointerEvent): void {
+    this.canvas.setPointerCapture(event.pointerId);
+    const pointerPosition = this.getCanvasPosition(event);
+    this.capturedPointers.set(event.pointerId, {
+      id: event.pointerId,
+      origin: pointerPosition,
+      position: pointerPosition,
+      timestamp: performance.now(),
     });
-    meanDistance /= pointerCount;
-    return meanDistance;
   }
 
-  private getCanvasPosition(event: MouseEvent): Point {
-    return {
-      x: event.pageX - this.canvasOrigin.x,
-      y: event.pageY - this.canvasOrigin.y,
+  private releasePointerEvent(event: PointerEvent): void {
+    const pointer = this.capturedPointers.get(event.pointerId);
+    if (!pointer) {
+      return;
+    }
+    this.canvas.releasePointerCapture(event.pointerId);
+    this.capturedPointers.delete(event.pointerId);
+  };
+
+  private startPointerDrag(event: PointerEvent): void {
+    if (!this.isLeftOrMiddleClick(event)) {
+      return;
+    }
+    this.capturePointerEvent(event);
+    if (this.viewportState === ViewportState.Idle) {
+      this.computePieceHovering(event);
+    }
+    this.computeViewportState();
+    if (this.viewportState === ViewportState.Interaction) {
+      this.startPieceDragging();
+    }
+    else if (this.viewportState === ViewportState.Manipulation) {
+      if (this.viewportManipulation === ManipulationType.Pan) {
+        this.startViewportDragging();
+      }
+      else if (this.viewportManipulation === ManipulationType.Pinch) {
+        this.startViewportPinching();
+      }
+    }
+  }
+
+  private stopPointerDrag(event: PointerEvent): void {
+    if (!this.isPointerCaptured(event)) {
+      return;
+    }
+    this.releasePointerEvent(event);
+    if (this.viewportState === ViewportState.Interaction) {
+      this.stopPieceDragging();
+    }
+    else if (this.viewportState === ViewportState.Manipulation) {
+      if (this.viewportManipulation === ManipulationType.Pan) {
+        this.stopViewportDragging();
+      }
+      else if (this.viewportManipulation === ManipulationType.Pinch) {
+        this.stopViewportPinching();
+      }
+    }
+    this.computeViewportState();
+    if (this.viewportState === ViewportState.Idle) {
+      this.computePieceHovering(event);
+    }
+    else if (this.viewportState === ViewportState.Manipulation) {
+      // The pointerup event may trigger when going from 2 to 1 active pointer,
+      // in this case, we immediatly move from a "pinching" to a "panning" manipulation
+      if (this.viewportManipulation === ManipulationType.Pan) {
+        this.startViewportDragging();
+      }
+      // It may also trigger when going from 3 to 2 active pointers,
+      // in this case, we immediatly create a new "pinching" manipulation
+      else if (this.viewportManipulation === ManipulationType.Pinch) {
+        this.startViewportPinching();
+      }
+    }
+  }
+
+  private computePointerMove(event: PointerEvent): void {
+    this.setPointerPositionFromEvent(event);
+    if (this.viewportState === ViewportState.Idle) {
+      this.computePieceHovering(event);
+    }
+    else if (this.viewportState === ViewportState.Interaction) {
+      this.computePieceDragging();
+    }
+    else {
+      if (this.viewportManipulation === ManipulationType.Pan) {
+        this.computeViewportDragging();
+      }
+      else if (this.viewportManipulation === ManipulationType.Pinch) {
+        this.computePinchToZoom();
+      }
+    }
+  }
+
+  private computeWheelZoom(event: WheelEvent): void {
+    if (this.viewportState === ViewportState.Manipulation) {
+      return;
+    }
+    const scaleStep = 0.1;
+    const zoomDirection = -Math.sign(event.deltaY);
+    const currentScale = this.viewportContainer.scale.x;
+    const scaleFactor = this.getClampedScaleFactor(currentScale, 1 + zoomDirection * scaleStep);
+    this.updateViewportScale(currentScale * scaleFactor);
+    const mousePositionInCanvas = this.getCanvasPosition(event);
+    const currentMousePositionInContainer = {
+      x: mousePositionInCanvas.x - this.viewportContainer.x,
+      y: mousePositionInCanvas.y - this.viewportContainer.y,
     };
+    const scaledMousePositionInContainer = {
+      x: currentMousePositionInContainer.x * scaleFactor,
+      y: currentMousePositionInContainer.y * scaleFactor,
+    };
+    const offsetVector = {
+      x: scaledMousePositionInContainer.x - currentMousePositionInContainer.x,
+      y: scaledMousePositionInContainer.y - currentMousePositionInContainer.y,
+    };
+    this.viewportContainer.x -= offsetVector.x;
+    this.viewportContainer.y -= offsetVector.y;
   }
 
-  private getPieceContainerPosition(point: Point): Point {
-    const result = { x: 0, y: 0 };
-    this.pieceContainer.toLocal(point, this.application.stage, result);
-    return result;
+  private setPointerPositionFromEvent(event: PointerEvent): void {
+    const pointer = this.capturedPointers.get(event.pointerId);
+    if (!pointer) {
+      return;
+    }
+    pointer.position = this.getCanvasPosition(event);
   }
 
-  private handlePieceHovering(event: PointerEvent): void {
+  private computeViewportState(): void {
+    const previousState = this.viewportState;
+    const previousManipulation = this.viewportManipulation;
+    if (this.capturedPointers.size === 0) {
+      this.viewportState = ViewportState.Idle;
+      this.viewportManipulation = undefined;
+    }
+    else if (this.capturedPointers.size === 1) {
+      if (this.viewportState === ViewportState.Idle && this.hoveredPieceGroup) {
+        this.viewportState = ViewportState.Interaction;
+        this.viewportManipulation = undefined;
+      }
+      else if (this.viewportState !== ViewportState.Interaction) {
+        this.viewportState = ViewportState.Manipulation;
+        this.viewportManipulation = ManipulationType.Pan;
+      }
+    }
+    else if (this.capturedPointers.size > 1) {
+      this.viewportState = ViewportState.Manipulation;
+      this.viewportManipulation = ManipulationType.Pinch;
+    }
+    if (previousState !== this.viewportState) {
+      this.canvas.setAttribute('data-viewport-state', this.viewportState);
+    }
+    if (previousManipulation !== this.viewportManipulation) {
+      this.canvas.setAttribute('data-viewport-manipulation', this.viewportManipulation ?? '');
+    }
+  }
+
+  private computePieceHovering(event: PointerEvent): void {
     const previousCanInteract = this.canInteract;
     const canvasPosition = this.getCanvasPosition(event);
     const mousePositionInPieceContainer = this.getPieceContainerPosition(canvasPosition);
@@ -552,65 +738,6 @@ export class PuzzleGame {
     this.initalViewportDrag = undefined;
   }
 
-  private viewportWheelZoom(event: WheelEvent): void {
-    const scaleStep = 0.1;
-    const zoomDirection = -Math.sign(event.deltaY);
-    const currentScale = this.viewportContainer.scale.x;
-    const scaleFactor = this.getClampedScaleFactor(currentScale, 1 + zoomDirection * scaleStep);
-    this.updateViewportScale(currentScale * scaleFactor);
-    const mousePositionInCanvas = this.getCanvasPosition(event);
-    const currentMousePositionInContainer = {
-      x: mousePositionInCanvas.x - this.viewportContainer.x,
-      y: mousePositionInCanvas.y - this.viewportContainer.y,
-    };
-    const scaledMousePositionInContainer = {
-      x: currentMousePositionInContainer.x * scaleFactor,
-      y: currentMousePositionInContainer.y * scaleFactor,
-    };
-    const offsetVector = {
-      x: scaledMousePositionInContainer.x - currentMousePositionInContainer.x,
-      y: scaledMousePositionInContainer.y - currentMousePositionInContainer.y,
-    };
-    this.viewportContainer.x -= offsetVector.x;
-    this.viewportContainer.y -= offsetVector.y;
-  }
-
-  private isPointerCaptured(event: PointerEvent): boolean {
-    return this.capturedPointers.has(event.pointerId);
-  }
-
-  private isLeftOrMiddleClick(event: PointerEvent): boolean {
-    return event.button === 0 || event.button === 1;
-  }
-
-  private capturePointerEvent(event: PointerEvent): void {
-    this.canvas.setPointerCapture(event.pointerId);
-    const pointerPosition = this.getCanvasPosition(event);
-    this.capturedPointers.set(event.pointerId, {
-      id: event.pointerId,
-      origin: pointerPosition,
-      position: pointerPosition,
-      timestamp: performance.now(),
-    });
-  }
-
-  private releasePointerEvent(event: PointerEvent): void {
-    const pointer = this.capturedPointers.get(event.pointerId);
-    if (!pointer) {
-      return;
-    }
-    this.canvas.releasePointerCapture(event.pointerId);
-    this.capturedPointers.delete(event.pointerId);
-  };
-
-  private movePointerEvent(event: PointerEvent): void {
-    const pointer = this.capturedPointers.get(event.pointerId);
-    if (!pointer) {
-      return;
-    }
-    pointer.position = this.getCanvasPosition(event);
-  }
-
   private startViewportPinching(): void {
     const pointerCount = this.capturedPointers.size;
     const pinchOrigin = this.getPointersCenter();
@@ -626,13 +753,6 @@ export class PuzzleGame {
       },
       pointerCount,
     };
-  }
-
-  private stopViewportPinching(): void {
-    if (!this.initialPinch) {
-      return;
-    }
-    this.initialPinch = undefined;
   }
 
   private computePinchToZoom(): void {
@@ -673,120 +793,60 @@ export class PuzzleGame {
     this.viewportContainer.y = Math.round(newViewportPosition.y - scaleOffset.y);
   }
 
-  private updateViewportState(): void {
-    const previousState = this.viewportState;
-    const previousManipulation = this.viewportManipulation;
-    if (this.capturedPointers.size === 0) {
-      this.viewportState = ViewportState.Idle;
-      this.viewportManipulation = undefined;
+  private stopViewportPinching(): void {
+    if (!this.initialPinch) {
+      return;
     }
-    else if (this.capturedPointers.size === 1) {
-      if (this.viewportState === ViewportState.Idle && this.hoveredPieceGroup) {
-        this.viewportState = ViewportState.Interaction;
-        this.viewportManipulation = undefined;
-      }
-      else if (this.viewportState !== ViewportState.Interaction) {
-        this.viewportState = ViewportState.Manipulation;
-        this.viewportManipulation = ManipulationType.Pan;
-      }
-    }
-    else if (this.capturedPointers.size > 1) {
-      this.viewportState = ViewportState.Manipulation;
-      this.viewportManipulation = ManipulationType.Pinch;
-    }
-    if (previousState !== this.viewportState) {
-      this.canvas.setAttribute('data-viewport-state', this.viewportState);
-    }
-    if (previousManipulation !== this.viewportManipulation) {
-      this.canvas.setAttribute('data-viewport-manipulation', this.viewportManipulation ?? '');
-    }
+    this.initialPinch = undefined;
   }
 
-  private startGameEventListeners(): void {
-    this.canvas.addEventListener('pointerdown', (event) => {
-      if (!this.isLeftOrMiddleClick(event)) {
-        return;
-      }
-      this.capturePointerEvent(event);
-      if (this.viewportState === ViewportState.Idle) {
-        this.handlePieceHovering(event);
-      }
-      this.updateViewportState();
-      if (this.viewportState === ViewportState.Interaction) {
-        this.startPieceDragging();
-      }
-      else if (this.viewportState === ViewportState.Manipulation) {
-        if (this.viewportManipulation === ManipulationType.Pan) {
-          this.startViewportDragging();
-        }
-        else if (this.viewportManipulation === ManipulationType.Pinch) {
-          this.startViewportPinching();
-        }
-      }
-    }, { passive: true });
+  private getClampedScale(targetScale: number): number {
+    const minScale = 0.04;
+    const maxScale = 1;
+    return Math.min(Math.max(targetScale, minScale), maxScale);
+  }
 
-    this.canvas.addEventListener('pointerup', (event) => {
-      if (!this.isPointerCaptured(event)) {
-        return;
-      }
-      this.releasePointerEvent(event);
-      if (this.viewportState === ViewportState.Interaction) {
-        this.stopPieceDragging();
-      }
-      else if (this.viewportState === ViewportState.Manipulation) {
-        if (this.viewportManipulation === ManipulationType.Pan) {
-          this.stopViewportDragging();
-        }
-        else if (this.viewportManipulation === ManipulationType.Pinch) {
-          this.stopViewportPinching();
-        }
-      }
-      this.updateViewportState();
-      if (this.viewportState === ViewportState.Idle) {
-        this.handlePieceHovering(event);
-      }
-      else if (this.viewportState === ViewportState.Manipulation) {
-        // The pointerup event may trigger when going from 2 to 1 active pointer,
-        // in this case, we immediatly move from a "pinching" to a "panning" manipulation
-        if (this.viewportManipulation === ManipulationType.Pan) {
-          this.startViewportDragging();
-        }
-        // It may also trigger when going from 3 to 2 active pointers,
-        // in this case, we immediatly create a new "pinching" manipulation
-        else if (this.viewportManipulation === ManipulationType.Pinch) {
-          this.startViewportPinching();
-        }
-      }
-    }, { passive: true });
+  private getClampedScaleFactor(currentScale: number, scaleFactor: number): number {
+    const targetScale = this.getClampedScale(currentScale * scaleFactor);
+    return targetScale / currentScale;
+  }
 
-    this.canvas.addEventListener('pointermove', (event) => {
-      this.movePointerEvent(event);
-      if (this.viewportState === ViewportState.Idle) {
-        this.handlePieceHovering(event);
-      }
-      else if (this.viewportState === ViewportState.Interaction) {
-        this.computePieceDragging();
-      }
-      else {
-        if (this.viewportManipulation === ManipulationType.Pan) {
-          this.computeViewportDragging();
-        }
-        else if (this.viewportManipulation === ManipulationType.Pinch) {
-          this.computePinchToZoom();
-        }
-      }
-    }, { passive: true });
+  private getPointersCenter(): Point {
+    const pointerCount = this.capturedPointers.size;
+    const center = { x: 0, y: 0 };
+    this.capturedPointers.forEach((capturedPointer) => {
+      center.x += capturedPointer.position.x;
+      center.y += capturedPointer.position.y;
+    });
+    center.x /= pointerCount;
+    center.y /= pointerCount;
+    return center;
+  }
 
-    this.canvas.addEventListener('pointerleave', () => {
-      this.releasePieceHover();
-    }, { passive: true });
+  private getPointersMeanDistanceTo(point: Point): number {
+    const pointerCount = this.capturedPointers.size;
+    let meanDistance = 0;
+    this.capturedPointers.forEach((capturedPointer) => {
+      meanDistance += Math.hypot(
+        capturedPointer.position.x - point.x,
+        capturedPointer.position.y - point.y,
+      );
+    });
+    meanDistance /= pointerCount;
+    return meanDistance;
+  }
 
-    this.canvas.addEventListener('wheel', (event: WheelEvent) => {
-      if (this.viewportState === ViewportState.Manipulation) {
-        return;
-      }
-      this.viewportWheelZoom(event);
-    }, { passive: true });
+  private getCanvasPosition(event: MouseEvent): Point {
+    return {
+      x: event.pageX - this.canvasOrigin.x,
+      y: event.pageY - this.canvasOrigin.y,
+    };
+  }
+
+  private getPieceContainerPosition(point: Point): Point {
+    const result = { x: 0, y: 0 };
+    this.pieceContainer.toLocal(point, this.application.stage, result);
+    return result;
   }
 
   private getPieceGroupAt(point: Point): PieceGroup | undefined {
@@ -856,90 +916,6 @@ export class PuzzleGame {
     finishedText.y = Math.round((document.documentElement.clientHeight - finishedText.height) / 2);
     this.application.stage.addChild(finishedText);
     return true;
-  }
-
-  private shufflePieces(): void {
-    const remainingPieces = [...this.pieceContainer.children];
-    const horizontalSpriteCount = Math.floor(this.puzzleWidth / this.pieceSpriteSize);
-    const verticalSpriteCount = Math.floor(this.puzzleHeight / this.pieceSpriteSize);
-    const cellWidth = this.puzzleWidth / horizontalSpriteCount;
-    const cellHeight = this.puzzleHeight / verticalSpriteCount;
-    let horizontalCellCount = horizontalSpriteCount + 2;
-    let verticalCellCount = verticalSpriteCount;
-    let outlineIndex = 1;
-    let outlineCellIndex = 0;
-    while (remainingPieces.length > 0) {
-      // Compute current outline settings
-      const outlineOrigin = {
-        x: -outlineIndex * cellWidth,
-        y: -outlineIndex * cellHeight,
-      };
-      const leftSideLastIndex = verticalCellCount - 1;
-      const rightSideLastIndex = leftSideLastIndex + verticalCellCount;
-      const topSideLastIndex = rightSideLastIndex + horizontalCellCount;
-
-      // Compute the cell coordinates from its index on the outline, and following that order:
-      // - left side, top to bottom
-      // - right side, top to bottom
-      // - top side, left to right
-      // - bottom side, left to right
-      let cellCoordinate: Point;
-
-      // Left side
-      if (outlineCellIndex <= leftSideLastIndex) {
-        cellCoordinate = {
-          x: 0,
-          y: outlineCellIndex + 1,
-        };
-      }
-      // Right side
-      else if (outlineCellIndex <= rightSideLastIndex) {
-        cellCoordinate = {
-          x: horizontalCellCount - 1,
-          y: outlineCellIndex - leftSideLastIndex,
-        };
-      }
-      // Top side
-      else if (outlineCellIndex <= topSideLastIndex) {
-        cellCoordinate = {
-          x: outlineCellIndex - rightSideLastIndex - 1,
-          y: 0,
-        };
-      }
-      // Bottom side
-      else {
-        cellCoordinate = {
-          x: outlineCellIndex - topSideLastIndex - 1,
-          y: verticalCellCount + 1,
-        };
-      }
-
-      // Move a random piece to the current outline cell position
-      const pieceIndex = Math.floor(Math.random() * remainingPieces.length);
-      const piece = remainingPieces.splice(pieceIndex, 1)[0];
-      piece.x = Math.round(cellCoordinate.x * cellWidth + outlineOrigin.x + (cellWidth - piece.width) / 2);
-      piece.y = Math.round(cellCoordinate.y * cellHeight + outlineOrigin.y + (cellHeight - piece.height) / 2);
-
-      // Move to the next cell and wrap to the next outline if needed
-      outlineCellIndex++;
-      const outlineCellCount = (horizontalCellCount + verticalCellCount) * 2;
-      if (outlineCellIndex === outlineCellCount) {
-        outlineCellIndex = 0;
-        outlineIndex++;
-        horizontalCellCount += 2;
-        verticalCellCount += 2;
-      }
-    }
-  }
-
-  private movePieceToTop(pieceToMove: PieceGroup): void {
-    this.pieceContainer.removeChild(pieceToMove);
-    this.pieceContainer.addChild(pieceToMove);
-  }
-
-  private movePieceToBottom(pieceToMove: PieceGroup): void {
-    this.pieceContainer.removeChild(pieceToMove);
-    this.pieceContainer.addChildAt(pieceToMove, 0);
   }
 
 }
