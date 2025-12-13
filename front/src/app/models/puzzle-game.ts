@@ -66,6 +66,9 @@ export class PuzzleGame {
     wheel: (event) => {
       this.computeWheelZoom(event);
     },
+    contextmenu: (event) => {
+      event.preventDefault();
+    },
   };
 
   constructor(
@@ -448,6 +451,7 @@ export class PuzzleGame {
     this.canvas.addEventListener('pointermove', this.eventListeners.pointermove, { passive: true });
     this.canvas.addEventListener('pointerleave', this.eventListeners.pointerleave, { passive: true });
     this.canvas.addEventListener('wheel', this.eventListeners.wheel, { passive: true });
+    this.canvas.addEventListener('contextmenu', this.eventListeners.contextmenu);
   }
 
   private stopGameEventListeners(): void {
@@ -457,6 +461,7 @@ export class PuzzleGame {
     this.canvas.removeEventListener('pointermove', this.eventListeners.pointermove);
     this.canvas.removeEventListener('pointerleave', this.eventListeners.pointerleave);
     this.canvas.removeEventListener('wheel', this.eventListeners.wheel);
+    this.canvas.removeEventListener('contextmenu', this.eventListeners.contextmenu);
   }
 
   private isPointerCaptured(event: PointerEvent): boolean {

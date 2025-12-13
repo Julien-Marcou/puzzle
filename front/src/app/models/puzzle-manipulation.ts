@@ -52,4 +52,5 @@ export type PuzzleEventListeners = {
   pointermove: (event: PointerEvent) => void;
   pointerleave: (event: PointerEvent) => void;
   wheel: (event: WheelEvent) => void;
+  contextmenu: (event: Event) => void;
 };
