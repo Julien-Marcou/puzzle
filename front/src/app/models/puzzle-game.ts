@@ -48,6 +48,9 @@ export class PuzzleGame {
   private initialPieceGroupDrag?: PieceGroupDragInitialState;
 
   private readonly eventListeners: PuzzleEventListeners = {
+    beforeunload: (event) => {
+      this.preventLosingProgress(event);
+    },
     pointerdown: (event) => {
       this.startPointerDrag(event);
     },
@@ -445,6 +448,7 @@ export class PuzzleGame {
   }
 
   private startGameEventListeners(): void {
+    window.addEventListener('beforeunload', this.eventListeners.beforeunload);
     this.canvas.addEventListener('pointerdown', this.eventListeners.pointerdown, { passive: true });
     this.canvas.addEventListener('pointerup', this.eventListeners.pointerup, { passive: true });
     this.canvas.addEventListener('pointercancel', this.eventListeners.pointercancel, { passive: true });
@@ -455,6 +459,7 @@ export class PuzzleGame {
   }
 
   private stopGameEventListeners(): void {
+    window.removeEventListener('beforeunload', this.eventListeners.beforeunload);
     this.canvas.removeEventListener('pointerdown', this.eventListeners.pointerdown);
     this.canvas.removeEventListener('pointerup', this.eventListeners.pointerup);
     this.canvas.removeEventListener('pointercancel', this.eventListeners.pointercancel);
@@ -462,6 +467,14 @@ export class PuzzleGame {
     this.canvas.removeEventListener('pointerleave', this.eventListeners.pointerleave);
     this.canvas.removeEventListener('wheel', this.eventListeners.wheel);
     this.canvas.removeEventListener('contextmenu', this.eventListeners.contextmenu);
+  }
+
+  private preventLosingProgress(event: Event): string | false {
+    if (isDevMode()) {
+      return false;
+    }
+    event.preventDefault();
+    return 'Êtes-vous sûr de vouloir quitter la partie ?';
   }
 
   private isPointerCaptured(event: PointerEvent): boolean {
