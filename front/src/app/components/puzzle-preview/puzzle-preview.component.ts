@@ -2,7 +2,8 @@ import type { AbortablePromise } from '../../models/abortable-promise';
 import type { Point } from '../../models/geometry';
 import type { ElementRef, OnInit } from '@angular/core';
 
-import { Component, signal, viewChild } from '@angular/core';
+import { Component, DestroyRef, inject, signal, viewChild } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 
 import { AXIS_TO_DIMENSION, VALID_AXES } from '../../models/geometry';
@@ -38,6 +39,8 @@ type ImageError = 'unknown' | 'too-heavy' | 'too-small' | 'too-big' | 'file-read
   imports: [FormsModule, CheckmarkSpinnerComponent],
 })
 export class PuzzlePreviewComponent implements OnInit {
+
+  private readonly destroyRef = inject(DestroyRef);
 
   private readonly puzzleFileInput = viewChild.required<ElementRef<HTMLInputElement>>('puzzleFileInput');
   private readonly puzzlePreviewRef = viewChild.required<ElementRef<HTMLCanvasElement>>('puzzlePreview');
@@ -84,6 +87,8 @@ export class PuzzlePreviewComponent implements OnInit {
   public horizontalPieceCount = signal<number>(10);
   public verticalPieceCount = signal<number>(10);
   public gameStarted = signal<boolean>(false);
+  public gameFinished = signal<boolean>(false);
+  public gamePlayTime = signal<string>('');
   public imageError = signal<ImageError | null>(null);
 
   protected readonly maxFileSize = 15; // In Megabytes
@@ -184,6 +189,15 @@ export class PuzzlePreviewComponent implements OnInit {
       this.verticalPieceCount(),
     );
 
+    this.puzzleGame.onFinish$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(({ playTime }) => {
+      const playTimeInSeconds = playTime / 1000;
+      const playTimeHours = Math.floor(playTimeInSeconds / 3600);
+      const playTimeMinutes = Math.floor(playTimeInSeconds % 3600 / 60);
+      const playTimeSeconds = Math.floor(playTimeInSeconds % 3600 % 60);
+      this.gameFinished.set(true);
+      this.gamePlayTime.set(`${playTimeHours}h ${playTimeMinutes}m ${playTimeSeconds}s`);
+    });
+
     // Wait one frame to make sure the canvas wrapper is rendered,
     // so that the puzzle can start with the correct resolution
     await new Promise<void>((resolve) => {
@@ -200,6 +214,8 @@ export class PuzzlePreviewComponent implements OnInit {
       this.puzzleGame.stop();
     }
     this.gameStarted.set(false);
+    this.gameFinished.set(false);
+    this.gamePlayTime.set('');
   }
 
   public debugWebGL(): void {

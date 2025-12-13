@@ -5,6 +5,7 @@ import type { PuzzleSpritesheetParameters } from './puzzle-spritesheet-parameter
 
 import { isDevMode } from '@angular/core';
 import { AbstractRenderer, Application, Container, Graphics, ImageSource, Text, WebGLRenderer, WebGPURenderer } from 'pixi.js';
+import { Subject } from 'rxjs';
 
 import { PieceShape } from './piece-shape';
 import { ViewportState, ManipulationType } from './puzzle-manipulation';
@@ -47,9 +48,18 @@ export class PuzzleGame {
   private hoveredPieceGroup?: PieceGroup;
   private initialPieceGroupDrag?: PieceGroupDragInitialState;
 
+  private playTime = 0;
+  private startDate?: Date;
+
+  private readonly onFinish = new Subject<{ playTime: number }>();
+  public readonly onFinish$ = this.onFinish.asObservable();
+
   private readonly eventListeners: PuzzleEventListeners = {
     beforeunload: (event) => {
       this.preventLosingProgress(event);
+    },
+    visibilitychange: () => {
+      this.computePlayTime();
     },
     pointerdown: (event) => {
       this.startPointerDrag(event);
@@ -117,14 +127,17 @@ export class PuzzleGame {
     puzzleArea.x = this.puzzleOrigin.x;
     puzzleArea.y = this.puzzleOrigin.y;
     puzzleArea.rect(0, 0, this.puzzleWidth, this.puzzleHeight).fill(this.puzzleBackgroundColor);
+    puzzleArea.interactive = false;
 
     this.border = new Graphics();
+    this.border.interactive = false;
 
     this.viewportContainer = new Container();
     this.viewportContainer.addChild(this.border);
     this.viewportContainer.addChild(puzzleArea);
     this.viewportContainer.addChild(this.pieceContainer);
     this.viewportContainer.visible = false;
+    this.viewportContainer.interactive = false;
 
     this.application = new Application();
     this.application.stage.addChild(this.viewportContainer);
@@ -167,6 +180,7 @@ export class PuzzleGame {
       this.resizeObserver.observe(this.wrapper);
       this.startGameEventListeners();
       this.application.start();
+      this.startPlayTime();
     }
     catch (error) {
       console.error(error);
@@ -182,6 +196,7 @@ export class PuzzleGame {
       this.stopGameEventListeners();
       this.application.stop();
       this.application.destroy(true, true);
+      this.onFinish.complete();
     }
     catch (error) {
       console.error(error);
@@ -449,6 +464,7 @@ export class PuzzleGame {
 
   private startGameEventListeners(): void {
     window.addEventListener('beforeunload', this.eventListeners.beforeunload);
+    document.addEventListener('visibilitychange', this.eventListeners.visibilitychange, { passive: true });
     this.canvas.addEventListener('pointerdown', this.eventListeners.pointerdown, { passive: true });
     this.canvas.addEventListener('pointerup', this.eventListeners.pointerup, { passive: true });
     this.canvas.addEventListener('pointercancel', this.eventListeners.pointercancel, { passive: true });
@@ -460,6 +476,7 @@ export class PuzzleGame {
 
   private stopGameEventListeners(): void {
     window.removeEventListener('beforeunload', this.eventListeners.beforeunload);
+    document.removeEventListener('visibilitychange', this.eventListeners.visibilitychange);
     this.canvas.removeEventListener('pointerdown', this.eventListeners.pointerdown);
     this.canvas.removeEventListener('pointerup', this.eventListeners.pointerup);
     this.canvas.removeEventListener('pointercancel', this.eventListeners.pointercancel);
@@ -475,6 +492,37 @@ export class PuzzleGame {
     }
     event.preventDefault();
     return 'Êtes-vous sûr de vouloir quitter la partie ?';
+  }
+
+  private startPlayTime(): void {
+    if (document.hidden) {
+      return;
+    }
+    this.startDate = new Date();
+  }
+
+  private computePlayTime(): void {
+    const now = new Date();
+    // Pause
+    if (document.hidden) {
+      if (this.startDate) {
+        this.playTime += now.getTime() - this.startDate.getTime();
+        this.startDate = undefined;
+      }
+    }
+    // Play
+    else {
+      this.startDate = now;
+    }
+  }
+
+  private stopPlayTime(): void {
+    if (!this.startDate) {
+      return;
+    }
+    const now = new Date();
+    this.playTime += now.getTime() - this.startDate.getTime();
+    this.startDate = undefined;
   }
 
   private isPointerCaptured(event: PointerEvent): boolean {
@@ -935,22 +983,9 @@ export class PuzzleGame {
     if (!this.pieceContainer.children.every((pieceGroup) => pieceGroup.isLocked())) {
       return false;
     }
-    const finishedText = new Text({
-      text: 'GG',
-      style: {
-        fill: 0xffffff,
-        stroke: {
-          color: 0x000000,
-          width: 4,
-          join: 'bevel',
-        },
-        fontSize: 60,
-        fontFamily: 'sans-serif',
-      },
-    });
-    finishedText.x = Math.round((document.documentElement.clientWidth - finishedText.width) / 2);
-    finishedText.y = Math.round((document.documentElement.clientHeight - finishedText.height) / 2);
-    this.application.stage.addChild(finishedText);
+    this.stopPlayTime();
+    this.onFinish.next({ playTime: this.playTime });
+    this.border.visible = false;
     return true;
   }
 

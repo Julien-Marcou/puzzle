@@ -47,6 +47,7 @@ export const enum ManipulationType {
 
 export type PuzzleEventListeners = {
   beforeunload: (event: BeforeUnloadEvent) => void;
+  visibilitychange: (event: Event) => void;
   pointerdown: (event: PointerEvent) => void;
   pointerup: (event: PointerEvent) => void;
   pointercancel: (event: PointerEvent) => void;

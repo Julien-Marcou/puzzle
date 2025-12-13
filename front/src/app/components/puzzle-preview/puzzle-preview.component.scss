@@ -188,12 +188,7 @@
   overflow: hidden;
   background-color: #262524;
 
-  .close-puzzle-button,
-  .debug-webgl-button {
-    z-index: 1;
-    position: absolute;
-    top: 10px;
-    left: calc(50% - 100px);
+  .button {
     width: 200px;
     background-color: #32312f;
     color: #eceae8;
@@ -208,6 +203,13 @@
     }
   }
 
+  .close-puzzle-button,
+  .debug-webgl-button {
+    z-index: 1;
+    position: absolute;
+    left: calc(50% - 100px);
+  }
+
   .close-puzzle-button {
     top: 10px;
   }
@@ -215,5 +217,42 @@
   .debug-webgl-button {
     display: none;
     top: calc(20px + 2.55rem);
+  }
+
+  .end-dialog {
+    z-index: 1;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 1rem;
+    max-width: calc(100% - 32px);
+    max-height: 80vh;
+    width: 400px;
+    padding: 1.5rem;
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    border-radius: 12px;
+    color: #fff;
+
+    .title {
+      font-size: 3rem;
+      text-shadow: 0 0 10px #000;
+    }
+
+    .play-time {
+      font-size: 2rem;
+      color: #ddd;
+      text-shadow: 0 0 10px #000;
+    }
+
+    .button {
+      margin-top: 2rem;
+    }
   }
 }
