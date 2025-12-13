@@ -428,6 +428,10 @@ export class PuzzleGame {
       this.stopPointerDrag(event);
     }, { passive: true });
 
+    this.canvas.addEventListener('pointercancel', (event) => {
+      this.stopPointerDrag(event);
+    }, { passive: true });
+
     this.canvas.addEventListener('pointermove', (event) => {
       this.computePointerMove(event);
     }, { passive: true });
