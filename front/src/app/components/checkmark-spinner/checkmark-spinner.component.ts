@@ -1,11 +1,12 @@
 import type { ElementRef } from '@angular/core';
 
-import { Component, effect, input, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, input, viewChild } from '@angular/core';
 
 @Component({
   selector: 'app-checkmark-spinner',
   templateUrl: './checkmark-spinner.component.html',
   styleUrl: './checkmark-spinner.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CheckmarkSpinnerComponent {
 

@@ -2,7 +2,7 @@ import type { AbortablePromise } from '../../models/abortable-promise';
 import type { Point } from '../../models/geometry';
 import type { ElementRef, OnInit } from '@angular/core';
 
-import { Component, DestroyRef, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 
@@ -37,6 +37,7 @@ type ImageError = 'unknown' | 'too-heavy' | 'too-small' | 'too-big' | 'file-read
   templateUrl: './puzzle-preview.component.html',
   styleUrl: './puzzle-preview.component.scss',
   imports: [FormsModule, CheckmarkSpinnerComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PuzzlePreviewComponent implements OnInit {
 
