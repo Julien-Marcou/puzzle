@@ -90,19 +90,10 @@ export class PuzzleSpritesheetBuilder {
         spriteContext.lineWidth = PieceShape.Parameters.strokeThickness;
         spriteContext.stroke(pieceShape.path);
 
-        // build piece image
+        // crop piece image
+        const { sx, sy, sw, sh, dx, dy, dw, dh } = this.getPieceCropValues(x, y, pieceShape.x, pieceShape.y);
         spriteContext.clip(pieceShape.path);
-        spriteContext.drawImage(
-          this.parameters.image,
-          -this.parameters.pieceMargin + pieceShape.x + this.parameters.imageOffset.x,
-          -this.parameters.pieceMargin + pieceShape.y + this.parameters.imageOffset.y,
-          this.parameters.pieceSpriteSize,
-          this.parameters.pieceSpriteSize,
-          0,
-          0,
-          this.parameters.pieceSpriteSize,
-          this.parameters.pieceSpriteSize,
-        );
+        spriteContext.drawImage(this.parameters.image, sx, sy, sw, sh, dx, dy, dw, dh);
         spritesheetContext.drawImage(spriteCanvas, x * this.parameters.pieceSpriteSize, y * this.parameters.pieceSpriteSize);
       }
     }
@@ -141,6 +132,54 @@ export class PuzzleSpritesheetBuilder {
     }
 
     return { image: spritesheetCanvas.transferToImageBitmap(), alphaChannels };
+  }
+
+  private getPieceCropValues(x: number, y: number, originX: number, originY: number): { sx: number; sy: number; sw: number; sh: number; dx: number; dy: number; dw: number; dh: number } {
+    let sourceX = originX - this.parameters.pieceMargin + this.parameters.imageOffset.x;
+    let sourceY = originY - this.parameters.pieceMargin + this.parameters.imageOffset.y;
+    let sourceWidth = this.parameters.pieceSpriteSize;
+    let sourceHeight = this.parameters.pieceSpriteSize;
+
+    let destinationX = 0;
+    let destinationY = 0;
+    let destinationWidth = this.parameters.pieceSpriteSize;
+    let destinationHeight = this.parameters.pieceSpriteSize;
+
+    // Outer pieces of the puzzle don't need margin as they have no tab to connect to other pieces
+    // Also, cropping outside of the source image on iOS will make the drawImage() fail
+    // So we make sure to not have negative values for these outer pieces
+    if (x === 0) {
+      sourceX += this.parameters.pieceMargin;
+      destinationX += this.parameters.pieceMargin;
+      sourceWidth -= this.parameters.pieceMargin;
+      destinationWidth -= this.parameters.pieceMargin;
+    }
+    else if (x === this.parameters.horizontalPieceCount - 1) {
+      sourceWidth -= this.parameters.pieceMargin;
+      destinationWidth -= this.parameters.pieceMargin;
+    }
+
+    if (y === 0) {
+      sourceY += this.parameters.pieceMargin;
+      destinationY += this.parameters.pieceMargin;
+      sourceHeight -= this.parameters.pieceMargin;
+      destinationHeight -= this.parameters.pieceMargin;
+    }
+    else if (y === this.parameters.verticalPieceCount - 1) {
+      sourceHeight -= this.parameters.pieceMargin;
+      destinationHeight -= this.parameters.pieceMargin;
+    }
+
+    return {
+      sx: sourceX,
+      sy: sourceY,
+      sw: sourceWidth,
+      sh: sourceHeight,
+      dx: destinationX,
+      dy: destinationY,
+      dw: destinationWidth,
+      dh: destinationHeight,
+    };
   }
 
 }
