@@ -76,21 +76,21 @@ export class PuzzlePreviewComponent implements OnInit {
     'tiger-by-pexels.jpg',
   ];
 
-  public puzzleImage = signal<ImageBitmap | null>(null);
-  public selectedPuzzle = signal<string | null>(null);
-  public loadingPuzzle = signal<string | null>(null);
-  public selectedCustomPuzzle = signal<string | null>(null);
-  public loadingCustomPuzzle = signal<string | null>(null);
-  public selectedPieceSizeIndex = signal<number>(1);
-  public validPieceSizes = signal<number[]>([50, 100, 200, 400, 500]);
-  public puzzleOffset = signal<Point>({ x: 0, y: 0 });
-  public pieceSize = signal<number>(100);
-  public horizontalPieceCount = signal<number>(10);
-  public verticalPieceCount = signal<number>(10);
-  public gameStarted = signal<boolean>(false);
-  public gameFinished = signal<boolean>(false);
-  public gamePlayTime = signal<string>('');
-  public imageError = signal<ImageError | null>(null);
+  public readonly puzzleImage = signal<ImageBitmap | null>(null);
+  public readonly selectedPuzzle = signal<string | null>(null);
+  public readonly loadingPuzzle = signal<string | null>(null);
+  public readonly selectedCustomPuzzle = signal<string | null>(null);
+  public readonly loadingCustomPuzzle = signal<string | null>(null);
+  public readonly selectedPieceSizeIndex = signal<number>(1);
+  public readonly validPieceSizes = signal<number[]>([50, 100, 200, 400, 500]);
+  public readonly puzzleOffset = signal<Point>({ x: 0, y: 0 });
+  public readonly pieceSize = signal<number>(100);
+  public readonly horizontalPieceCount = signal<number>(10);
+  public readonly verticalPieceCount = signal<number>(10);
+  public readonly gameStarted = signal<boolean>(false);
+  public readonly gameFinished = signal<boolean>(false);
+  public readonly gamePlayTime = signal<string>('');
+  public readonly imageError = signal<ImageError | null>(null);
 
   protected readonly maxFileSize = 15; // In Megabytes
   protected readonly minPuzzleImageWidth = 450; // In pixels

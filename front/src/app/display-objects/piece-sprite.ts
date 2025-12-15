@@ -6,7 +6,7 @@ import { Texture, Sprite, Rectangle } from 'pixi.js';
 
 export class PieceSprite extends Sprite {
 
-  declare public parent: PieceGroup;
+  declare public readonly parent: PieceGroup;
 
   private readonly transparentThreshold = 80;
 

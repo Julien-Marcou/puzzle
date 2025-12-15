@@ -468,7 +468,7 @@ export class PuzzleGame {
     this.canvas.addEventListener('pointercancel', this.eventListeners.pointercancel, { passive: true });
     this.canvas.addEventListener('pointermove', this.eventListeners.pointermove, { passive: true });
     this.canvas.addEventListener('pointerleave', this.eventListeners.pointerleave, { passive: true });
-    this.canvas.addEventListener('wheel', this.eventListeners.wheel, { passive: true });
+    this.canvas.addEventListener('wheel', this.eventListeners.wheel);
     this.canvas.addEventListener('contextmenu', this.eventListeners.contextmenu);
   }
 
@@ -626,6 +626,7 @@ export class PuzzleGame {
   }
 
   private computeWheelZoom(event: WheelEvent): void {
+    event.preventDefault();
     if (this.viewportState === ViewportState.Manipulation) {
       return;
     }
