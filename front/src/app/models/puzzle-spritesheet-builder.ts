@@ -98,6 +98,9 @@ export class PuzzleSpritesheetBuilder {
       }
     }
 
+    // Close original image as we no longer need it, to save some memory
+    this.parameters.image.close();
+
     // Order matters, transferToImageBitamp() will clear the canvas, so getImageData() would no longer work after it
     const rgbaData = spritesheetContext.getImageData(0, 0, spritesheetWidth, spritesheetHeight).data;
     const image = spritesheetCanvas.transferToImageBitmap();

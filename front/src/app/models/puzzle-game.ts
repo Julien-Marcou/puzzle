@@ -284,17 +284,25 @@ export class PuzzleGame {
   }
 
   private async buildSpritesheet(): Promise<PuzzleSpritesheet> {
+    // Cloning original image, so that we can transfer it to the worker, and still be able to use it on the frontend
+    const clonedImage = await createImageBitmap(this.puzzleImage);
+
     const { promise, resolve, reject } = Promise.withResolvers<PuzzleSpritesheet>();
     const worker = new Worker(new URL('./puzzle-spritesheet-worker', import.meta.url));
-    worker.postMessage({
-      image: this.puzzleImage,
-      imageOffset: this.puzzleOffset,
-      pieceSize: this.pieceSize,
-      pieceMargin: this.pieceMargin,
-      pieceSpriteSize: this.pieceSpriteSize,
-      horizontalPieceCount: this.horizontalPieceCount,
-      verticalPieceCount: this.verticalPieceCount,
-    } satisfies PuzzleSpritesheetParameters);
+    worker.postMessage(
+      {
+        image: clonedImage,
+        imageOffset: this.puzzleOffset,
+        pieceSize: this.pieceSize,
+        pieceMargin: this.pieceMargin,
+        pieceSpriteSize: this.pieceSpriteSize,
+        horizontalPieceCount: this.horizontalPieceCount,
+        verticalPieceCount: this.verticalPieceCount,
+      } satisfies PuzzleSpritesheetParameters,
+      {
+        transfer: [clonedImage],
+      },
+    );
     worker.onmessage = ({ data }: MessageEvent<PuzzleSpritesheet | null>): void => {
       if (data) {
         resolve(data);
@@ -303,6 +311,7 @@ export class PuzzleGame {
         reject(new Error('Spritesheet build error'));
       }
     };
+
     return await promise;
   }
 
