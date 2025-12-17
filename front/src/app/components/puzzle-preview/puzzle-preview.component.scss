@@ -1,0 +1,50 @@
+:host {
+  display: block;
+}
+
+.puzzle-preview-output {
+  position: relative;
+  overflow: hidden;
+
+  .loader {
+    display: none;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 3rem;
+    font-size: 2rem;
+    align-items: flex-start;
+    justify-content: center;
+    background-color: rgba(80, 80, 80, 0.5);
+    color: #fff;
+    text-shadow: 0 0 2px rgba(0, 0, 0, 0.7);
+  }
+
+  canvas {
+    display: block;
+    width: 100%;
+    user-select: none;
+    -webkit-user-select: none;
+    margin: 0 auto;
+  }
+
+  .puzzle-cutouts-canvas {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+  }
+
+  &.loading {
+    .loader {
+      display: grid;
+      backdrop-filter: blur(15px) saturate(1.2);
+    }
+    .puzzle-cutouts-canvas {
+      opacity: 0;
+    }
+  }
+}

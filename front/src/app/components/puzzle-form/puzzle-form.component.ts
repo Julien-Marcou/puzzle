@@ -7,10 +7,10 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 
 import { AXIS_TO_DIMENSION, VALID_AXES } from '../../models/geometry';
-import { PuzzlePreview } from '../../models/puzzle-preview';
 import { CurrentPuzzleGameService } from '../../services/current-puzzle-parameters.service';
 import { FileFetchError, FileReadError, ImageCreateError, ImageLoader } from '../../services/image-loader';
 import { CheckmarkSpinnerComponent } from '../checkmark-spinner/checkmark-spinner.component';
+import { PuzzlePreviewComponent } from '../puzzle-preview/puzzle-preview.component';
 
 class ImageTooBigError extends Error {
 
@@ -36,7 +36,7 @@ type ImageError = 'unknown' | 'too-heavy' | 'too-small' | 'too-big' | 'file-read
   selector: 'app-puzzle-form',
   templateUrl: './puzzle-form.component.html',
   styleUrl: './puzzle-form.component.scss',
-  imports: [FormsModule, CheckmarkSpinnerComponent],
+  imports: [FormsModule, CheckmarkSpinnerComponent, PuzzlePreviewComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PuzzleFormComponent implements OnInit {
@@ -45,7 +45,6 @@ export class PuzzleFormComponent implements OnInit {
   private readonly currentPuzzleGameService = inject(CurrentPuzzleGameService);
 
   private readonly puzzleFileInput = viewChild.required<ElementRef<HTMLInputElement>>('puzzleFileInput');
-  private readonly puzzlePreviewRef = viewChild.required<ElementRef<HTMLCanvasElement>>('puzzlePreview');
 
   public readonly puzzleImageFolder = '/img/puzzles';
   public readonly puzzleThumbnailFolder = '/img/puzzle-thumbnails';
@@ -104,7 +103,6 @@ export class PuzzleFormComponent implements OnInit {
   private readonly maxPieceSizeConstraint = 600; // In pixels
   private readonly imageErrorDelay = 5000; // In milliseconds
   private imageLoading?: AbortablePromise<ImageBitmap>;
-  private renderingPreview = false;
   private imageErrorTimeout?: number;
 
   public ngOnInit(): void {
@@ -168,9 +166,9 @@ export class PuzzleFormComponent implements OnInit {
     }
   }
 
-  public async updatePieceSize(): Promise<void> {
+  public updatePieceSize(): void {
     this.pieceSize.set(this.validPieceSizes()[this.selectedPieceSizeIndex()]);
-    await this.updatePuzzleSize();
+    this.updatePuzzleSize();
   }
 
   public async startPuzzle(): Promise<void> {
@@ -209,7 +207,7 @@ export class PuzzleFormComponent implements OnInit {
         currentPuzzleImage.close();
       }
       this.puzzleImage.set(newPuzzleImage);
-      await this.updateValidPieceSizes();
+      this.updateValidPieceSizes();
       success = true;
     }
     catch (error) {
@@ -240,7 +238,7 @@ export class PuzzleFormComponent implements OnInit {
     return success;
   }
 
-  private async updateValidPieceSizes(): Promise<void> {
+  private updateValidPieceSizes(): void {
     const puzzleImage = this.puzzleImage();
     if (!puzzleImage) {
       return;
@@ -277,10 +275,10 @@ export class PuzzleFormComponent implements OnInit {
 
     this.validPieceSizes.set(validPieceSizes);
     this.selectedPieceSizeIndex.set(Math.floor(this.validPieceSizes().length / 4));
-    await this.updatePieceSize();
+    this.updatePieceSize();
   }
 
-  private async updatePuzzleSize(): Promise<void> {
+  private updatePuzzleSize(): void {
     const puzzleImage = this.puzzleImage();
     if (!puzzleImage) {
       return;
@@ -292,37 +290,6 @@ export class PuzzleFormComponent implements OnInit {
     this.puzzleOffset.set({
       x: Math.floor((puzzleImage.width - puzzleWidth) / 2),
       y: Math.floor((puzzleImage.height - puzzleHeight) / 2),
-    });
-    await this.updatePuzzlePreview();
-  }
-
-  private async updatePuzzlePreview(): Promise<void> {
-    // Throttle the rendering so that we are not rendering it too often
-    // (the user may change the puzzle size faster than the canvas is able to render it during one frame)
-    if (this.renderingPreview) {
-      return;
-    }
-    return new Promise((resolve) => {
-      this.renderingPreview = true;
-      window.requestAnimationFrame(() => {
-        // The rendering must be synchronous,
-        // so that cancelling a new puzzle image loading and immediatly loading another one
-        // will guarantee that that the first one will not render after the second one
-        this.renderingPreview = false;
-        const puzzleImage = this.puzzleImage();
-        if (!puzzleImage) {
-          return;
-        }
-        new PuzzlePreview(
-          this.puzzlePreviewRef().nativeElement,
-          puzzleImage,
-          this.puzzleOffset(),
-          this.pieceSize(),
-          this.horizontalPieceCount(),
-          this.verticalPieceCount(),
-        );
-        resolve();
-      });
     });
   }
 

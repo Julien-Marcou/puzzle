@@ -66,10 +66,14 @@
 
     <div class="puzzle-preview">
       <div class="label">Preview du puzzle :</div>
-      <div class="puzzle-preview-output" [class.loading]="loadingPuzzle() || loadingCustomPuzzle() || !puzzleImage()">
-        <canvas class="puzzle-preview-canvas" #puzzlePreview></canvas>
-        <div class="loader">Chargement...</div>
-      </div>
+      <app-puzzle-preview
+        [loading]="!!loadingPuzzle() || !!loadingCustomPuzzle()"
+        [puzzleImage]="puzzleImage()"
+        [puzzleOffset]="puzzleOffset()"
+        [pieceSize]="pieceSize()"
+        [horizontalPieceCount]="horizontalPieceCount()"
+        [verticalPieceCount]="verticalPieceCount()"
+      />
     </div>
   </div>
 
