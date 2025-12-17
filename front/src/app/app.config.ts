@@ -4,14 +4,14 @@ import type { Routes } from '@angular/router';
 import { provideBrowserGlobalErrorListeners, provideZonelessChangeDetection } from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 
+import { PuzzleFormComponent } from './components/puzzle-form/puzzle-form.component';
 import { PuzzleGameComponent } from './components/puzzle-game/puzzle-game.component';
-import { PuzzlePreviewComponent } from './components/puzzle-preview/puzzle-preview.component';
 import { currentPuzzleGameParametersResolver } from './resolvers/current-puzzle-game-parameters.resolver';
 
 const APP_ROUTES: Routes = [
   {
     path: '',
-    component: PuzzlePreviewComponent,
+    component: PuzzleFormComponent,
   },
   {
     path: 'play',

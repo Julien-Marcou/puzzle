@@ -33,13 +33,13 @@ class ImageTooSmallError extends Error {
 type ImageError = 'unknown' | 'too-heavy' | 'too-small' | 'too-big' | 'file-read' | 'file-fetch' | 'image-create';
 
 @Component({
-  selector: 'app-puzzle-preview',
-  templateUrl: './puzzle-preview.component.html',
-  styleUrl: './puzzle-preview.component.scss',
+  selector: 'app-puzzle-form',
+  templateUrl: './puzzle-form.component.html',
+  styleUrl: './puzzle-form.component.scss',
   imports: [FormsModule, CheckmarkSpinnerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PuzzlePreviewComponent implements OnInit {
+export class PuzzleFormComponent implements OnInit {
 
   private readonly router = inject(Router);
   private readonly currentPuzzleGameService = inject(CurrentPuzzleGameService);
