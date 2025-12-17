@@ -65,10 +65,4 @@ export class PuzzleGameComponent implements OnInit {
     this.displayEndDialog.set(false);
   }
 
-  public debugWebGL(): void {
-    if (this.puzzleGame) {
-      this.puzzleGame.debug();
-    }
-  }
-
 }

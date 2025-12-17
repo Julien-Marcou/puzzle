@@ -23,20 +23,11 @@
   }
 }
 
-.close-puzzle-button,
-.debug-webgl-button {
+.close-puzzle-button {
   z-index: 1;
   position: absolute;
   left: calc(50% - 100px);
-}
-
-.close-puzzle-button {
   top: 10px;
-}
-
-.debug-webgl-button {
-  display: none;
-  top: calc(20px + 2.55rem);
 }
 
 .puzzle-game-wrapper {

@@ -5,7 +5,7 @@ import type { PuzzleSpritesheet } from './puzzle-spritesheet';
 import type { PuzzleSpritesheetParameters } from './puzzle-spritesheet-parameters';
 
 import { isDevMode } from '@angular/core';
-import { AbstractRenderer, Application, Container, Graphics, ImageSource, Text, WebGLRenderer, WebGPURenderer } from 'pixi.js';
+import { AbstractRenderer, Application, Container, Graphics, ImageSource, Text } from 'pixi.js';
 import { Subject } from 'rxjs';
 
 import { PieceShape } from './piece-shape';
@@ -179,9 +179,6 @@ export class PuzzleGame {
     }
     catch (error) {
       console.error(error);
-      if (isDevMode()) {
-        this.debug(error);
-      }
     }
   }
 
@@ -197,52 +194,6 @@ export class PuzzleGame {
       console.error(error);
     }
   }
-
-  /* eslint-disable @typescript-eslint/restrict-template-expressions, @typescript-eslint/no-base-to-string, @typescript-eslint/no-unsafe-assignment */
-  public debug(message?: unknown): void {
-    const renderer = this.application.renderer;
-    if (renderer instanceof WebGLRenderer) {
-      const webglVersion = renderer.context.webGLVersion;
-      const maxTextureSize = renderer.gl.getParameter(renderer.gl.MAX_TEXTURE_SIZE);
-      const maxViewportDims = renderer.gl.getParameter(renderer.gl.MAX_VIEWPORT_DIMS);
-      const currentViewport = renderer.gl.getParameter(renderer.gl.VIEWPORT);
-      const maxRenderBufferSize = renderer.gl.getParameter(renderer.gl.MAX_RENDERBUFFER_SIZE);
-      const maxTextureImageUnits = renderer.gl.getParameter(renderer.gl.MAX_TEXTURE_IMAGE_UNITS);
-      const maxCombinedTextureImageUnits = renderer.gl.getParameter(renderer.gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS);
-      const currentRenderBufferWidth = renderer.gl.getRenderbufferParameter(renderer.gl.RENDERBUFFER, renderer.gl.RENDERBUFFER_WIDTH);
-      const currentRenderBufferHeight = renderer.gl.getRenderbufferParameter(renderer.gl.RENDERBUFFER, renderer.gl.RENDERBUFFER_HEIGHT);
-      this.wrapper.innerHTML = `<p style="overflow-y: auto; overflow-x: hidden; display: block; width: 100%; height: 100%; padding: 5px;">
-        ${message ? `${message}<br><br>` : ''}
-        WebGL ${webglVersion}<br>
-        Pixel Density: ${window.devicePixelRatio}<br>
-        Max texture size: ${maxTextureSize}<br>
-        Max texture image units: ${maxTextureImageUnits}<br>
-        Max combined texture image units: ${maxCombinedTextureImageUnits}<br>
-        Max render buffer size: ${maxRenderBufferSize}<br>
-        Max viewport size: ${maxViewportDims}<br>
-        Current render buffer width: ${currentRenderBufferWidth}<br>
-        Current render buffer height: ${currentRenderBufferHeight}<br>
-        Current viewport size: ${currentViewport}<br>
-      </p>`;
-    }
-    else if (renderer instanceof WebGPURenderer) {
-      const limits = renderer.gpu.device.limits;
-      this.wrapper.innerHTML = `<p style="overflow-y: auto; overflow-x: hidden; display: block; width: 100%; height: 100%; padding: 5px;">
-        ${message ? `${message}<br><br>` : ''}
-        WebGPU<br>
-        Pixel Density: ${window.devicePixelRatio}<br>
-        Max texture dimension 2D: ${limits.maxTextureDimension2D}<br>
-        Max texture array layers: ${limits.maxTextureArrayLayers}<br>
-        Max buffer size: ${limits.maxBufferSize}<br>
-        Supported features: ${Array.from(renderer.gpu.device.features.values()).join(', ')}<br>
-      </p>`;
-    }
-    else {
-      this.wrapper.innerHTML = `<p>${message}<p>`;
-    }
-    this.stop();
-  }
-  /* eslint-enable @typescript-eslint/restrict-template-expressions, @typescript-eslint/no-base-to-string, @typescript-eslint/no-unsafe-assignment */
 
   private async renderFrame(): Promise<void> {
     this.application.render();
