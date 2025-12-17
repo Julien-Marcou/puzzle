@@ -7,7 +7,7 @@ import { FormsModule } from '@angular/forms';
 
 import { Axis, VALID_AXES } from '../../models/geometry';
 import { TabbedEdge } from '../../models/tabbed-edge';
-import { Canvas } from '../../services/canvas';
+import { Canvas } from '../../utils/canvas';
 
 @Component({
   selector: 'app-puzzle-preview',

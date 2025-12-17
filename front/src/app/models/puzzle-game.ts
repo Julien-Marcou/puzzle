@@ -236,7 +236,7 @@ export class PuzzleGame {
     const clonedImage = await createImageBitmap(this.parameters.puzzleImage);
 
     const { promise, resolve, reject } = Promise.withResolvers<PuzzleSpritesheet>();
-    const worker = new Worker(new URL('./puzzle-spritesheet-worker', import.meta.url));
+    const worker = new Worker(new URL('../utils/puzzle-spritesheet-worker', import.meta.url));
     worker.postMessage(
       {
         ...this.parameters,

@@ -3,8 +3,8 @@ import type { BezierPath } from './geometry';
 
 import { Axis } from './geometry';
 import { PieceShape } from './piece-shape';
-import { Canvas } from '../services/canvas';
-import { Geometry } from '../services/geometry';
+import { Canvas } from '../utils/canvas';
+import { Geometry } from '../utils/geometry';
 
 export class TabbedEdge implements Edge {
 

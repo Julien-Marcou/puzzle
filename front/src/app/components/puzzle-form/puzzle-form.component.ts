@@ -8,7 +8,7 @@ import { Router } from '@angular/router';
 
 import { AXIS_TO_DIMENSION, VALID_AXES } from '../../models/geometry';
 import { CurrentPuzzleGameService } from '../../services/current-puzzle-parameters.service';
-import { FileFetchError, FileReadError, ImageCreateError, ImageLoader } from '../../services/image-loader';
+import { FileFetchError, FileReadError, ImageCreateError, ImageLoader } from '../../utils/image-loader';
 import { CheckmarkSpinnerComponent } from '../checkmark-spinner/checkmark-spinner.component';
 import { PuzzlePreviewComponent } from '../puzzle-preview/puzzle-preview.component';
 

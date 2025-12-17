@@ -1,4 +1,4 @@
-import type { PuzzleSpritesheetParameters } from './puzzle-spritesheet-parameters';
+import type { PuzzleSpritesheetParameters } from '../models/puzzle-spritesheet-parameters';
 
 import { PuzzleSpritesheetBuilder } from './puzzle-spritesheet-builder';
 

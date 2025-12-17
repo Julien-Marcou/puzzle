@@ -1,12 +1,12 @@
-import type { Edge } from './edge';
-import type { PuzzleSpritesheet } from './puzzle-spritesheet';
-import type { PuzzleSpritesheetParameters } from './puzzle-spritesheet-parameters';
+import type { Edge } from '../models/edge';
+import type { PuzzleSpritesheet } from '../models/puzzle-spritesheet';
+import type { PuzzleSpritesheetParameters } from '../models/puzzle-spritesheet-parameters';
 
-import { Axis } from './geometry';
-import { PieceShape } from './piece-shape';
-import { StraightEdge } from './straight-edge';
-import { TabbedEdge } from './tabbed-edge';
-import { Canvas } from '../services/canvas';
+import { Canvas } from './canvas';
+import { Axis } from '../models/geometry';
+import { PieceShape } from '../models/piece-shape';
+import { StraightEdge } from '../models/straight-edge';
+import { TabbedEdge } from '../models/tabbed-edge';
 
 export class PuzzleSpritesheetBuilder {
 
