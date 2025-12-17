@@ -250,6 +250,7 @@ export class PuzzleGame {
     worker.onmessage = ({ data }: MessageEvent<PuzzleSpritesheet | null>): void => {
       if (data) {
         resolve(data);
+        worker.terminate();
       }
       else {
         reject(new Error('Spritesheet build error'));
