@@ -93,13 +93,13 @@ export class PuzzleSpritesheetBuilder {
         // Crop piece image
         const { sx, sy, sw, sh, dx, dy, dw, dh } = this.getPieceCropValues(x, y, pieceShape.x, pieceShape.y);
         spriteContext.clip(pieceShape.path);
-        spriteContext.drawImage(this.parameters.image, sx, sy, sw, sh, dx, dy, dw, dh);
+        spriteContext.drawImage(this.parameters.puzzleImage, sx, sy, sw, sh, dx, dy, dw, dh);
         spritesheetContext.drawImage(spriteCanvas, x * this.parameters.pieceSpriteSize, y * this.parameters.pieceSpriteSize);
       }
     }
 
     // Close original image as we no longer need it, to save some memory
-    this.parameters.image.close();
+    this.parameters.puzzleImage.close();
 
     // Order matters, transferToImageBitamp() will clear the canvas, so getImageData() would no longer work after it
     const rgbaData = spritesheetContext.getImageData(0, 0, spritesheetWidth, spritesheetHeight).data;
@@ -118,8 +118,8 @@ export class PuzzleSpritesheetBuilder {
   }
 
   private getPieceCropValues(x: number, y: number, originX: number, originY: number): { sx: number; sy: number; sw: number; sh: number; dx: number; dy: number; dw: number; dh: number } {
-    let sourceX = originX - this.parameters.pieceMargin + this.parameters.imageOffset.x;
-    let sourceY = originY - this.parameters.pieceMargin + this.parameters.imageOffset.y;
+    let sourceX = originX - this.parameters.pieceMargin + this.parameters.puzzleOffset.x;
+    let sourceY = originY - this.parameters.pieceMargin + this.parameters.puzzleOffset.y;
     let sourceWidth = this.parameters.pieceSpriteSize;
     let sourceHeight = this.parameters.pieceSpriteSize;
 

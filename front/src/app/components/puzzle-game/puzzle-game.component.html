@@ -1,0 +1,12 @@
+<button type="button" class="button close-puzzle-button" (click)="exitPuzzle()">Changer de puzzle</button>
+<button type="button" class="button debug-webgl-button" (click)="debugWebGL()">Debug WebGL</button>
+
+<div class="puzzle-game-wrapper" #puzzleGameWrapper></div>
+
+@if (displayEndDialog()) {
+  <div class="end-dialog">
+    <div class="title">Bravo !</div>
+    <div class="play-time">{{ gamePlayTime() }}</div>
+    <button type="button" class="button" (click)="closeEndDialog()">Continuer</button>
+  </div>
+}

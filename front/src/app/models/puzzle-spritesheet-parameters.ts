@@ -1,11 +1,6 @@
-import type { Point } from './geometry';
+import type { PuzzleGameParameters } from './puzzle-game-parameters';
 
-export type PuzzleSpritesheetParameters = {
-  image: ImageBitmap;
-  imageOffset: Point;
-  pieceSize: number;
+export type PuzzleSpritesheetParameters = PuzzleGameParameters & {
   pieceMargin: number;
   pieceSpriteSize: number;
-  horizontalPieceCount: number;
-  verticalPieceCount: number;
 };

@@ -2,7 +2,7 @@
   <img src="/img/logo.png" alt="Pixi Puzzle Logo" width="465" height="165" />
 </div>
 
-<div class="puzzle-form" [hidden]="gameStarted()">
+<div class="puzzle-form">
   <div class="puzzle-parameters">
     <div class="puzzle-image-parameter">
       <div class="label">Choix du puzzle :</div>
@@ -102,16 +102,4 @@
   <button type="button" class="popup-error" [class.display]="imageError() === 'image-create'" (click)="clearImageError()">
     Une erreur est survenue pendant le chargement de l'image.
   </button>
-</div>
-
-<div class="puzzle-game-wrapper" #puzzleGameWrapper [hidden]="!gameStarted()">
-  <button type="button" class="button close-puzzle-button" (click)="exitPuzzle()">Changer de puzzle</button>
-  <button type="button" class="button debug-webgl-button" (click)="debugWebGL()">Debug WebGL</button>
-  @if (gameFinished()) {
-    <div class="end-dialog">
-      <div class="title">Bravo !</div>
-      <div class="play-time">{{ gamePlayTime() }}</div>
-      <button type="button" class="button" (click)="gameFinished.set(false)">Continuer</button>
-    </div>
-  }
 </div>

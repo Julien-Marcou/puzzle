@@ -2,13 +2,13 @@ import type { AbortablePromise } from '../../models/abortable-promise';
 import type { Point } from '../../models/geometry';
 import type { ElementRef, OnInit } from '@angular/core';
 
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal, viewChild } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ChangeDetectionStrategy, Component, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 
 import { AXIS_TO_DIMENSION, VALID_AXES } from '../../models/geometry';
-import { PuzzleGame } from '../../models/puzzle-game';
 import { PuzzlePreview } from '../../models/puzzle-preview';
+import { CurrentPuzzleGameService } from '../../services/current-puzzle-parameters.service';
 import { FileFetchError, FileReadError, ImageCreateError, ImageLoader } from '../../services/image-loader';
 import { CheckmarkSpinnerComponent } from '../checkmark-spinner/checkmark-spinner.component';
 
@@ -41,11 +41,11 @@ type ImageError = 'unknown' | 'too-heavy' | 'too-small' | 'too-big' | 'file-read
 })
 export class PuzzlePreviewComponent implements OnInit {
 
-  private readonly destroyRef = inject(DestroyRef);
+  private readonly router = inject(Router);
+  private readonly currentPuzzleGameService = inject(CurrentPuzzleGameService);
 
   private readonly puzzleFileInput = viewChild.required<ElementRef<HTMLInputElement>>('puzzleFileInput');
   private readonly puzzlePreviewRef = viewChild.required<ElementRef<HTMLCanvasElement>>('puzzlePreview');
-  private readonly puzzleGameWrapperRef = viewChild.required<ElementRef<HTMLElement>>('puzzleGameWrapper');
 
   public readonly puzzleImageFolder = '/img/puzzles';
   public readonly puzzleThumbnailFolder = '/img/puzzle-thumbnails';
@@ -103,7 +103,6 @@ export class PuzzlePreviewComponent implements OnInit {
   private readonly minPieceSizeConstraint = 60; // In pixels
   private readonly maxPieceSizeConstraint = 600; // In pixels
   private readonly imageErrorDelay = 5000; // In milliseconds
-  private puzzleGame?: PuzzleGame;
   private imageLoading?: AbortablePromise<ImageBitmap>;
   private renderingPreview = false;
   private imageErrorTimeout?: number;
@@ -180,49 +179,14 @@ export class PuzzlePreviewComponent implements OnInit {
       return;
     }
 
-    this.gameStarted.set(true);
-    this.puzzleGame = new PuzzleGame(
-      this.puzzleGameWrapperRef().nativeElement,
+    this.currentPuzzleGameService.setParameters({
       puzzleImage,
-      this.puzzleOffset(),
-      this.pieceSize(),
-      this.horizontalPieceCount(),
-      this.verticalPieceCount(),
-    );
-
-    this.puzzleGame.onFinish$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(({ playTime }) => {
-      const playTimeInSeconds = playTime / 1000;
-      const playTimeHours = Math.floor(playTimeInSeconds / 3600);
-      const playTimeMinutes = Math.floor(playTimeInSeconds % 3600 / 60);
-      const playTimeSeconds = Math.floor(playTimeInSeconds % 3600 % 60);
-      this.gameFinished.set(true);
-      this.gamePlayTime.set(`${playTimeHours}h ${playTimeMinutes}m ${playTimeSeconds}s`);
+      puzzleOffset: this.puzzleOffset(),
+      pieceSize: this.pieceSize(),
+      horizontalPieceCount: this.horizontalPieceCount(),
+      verticalPieceCount: this.verticalPieceCount(),
     });
-
-    // Wait one frame to make sure the canvas wrapper is rendered,
-    // so that the puzzle can start with the correct resolution
-    await new Promise<void>((resolve) => {
-      window.requestAnimationFrame(() => {
-        resolve();
-      });
-    });
-
-    await this.puzzleGame.start();
-  }
-
-  public exitPuzzle(): void {
-    if (this.puzzleGame) {
-      this.puzzleGame.stop();
-    }
-    this.gameStarted.set(false);
-    this.gameFinished.set(false);
-    this.gamePlayTime.set('');
-  }
-
-  public debugWebGL(): void {
-    if (this.puzzleGame) {
-      this.puzzleGame.debug();
-    }
+    await this.router.navigate(['/play']);
   }
 
   private async updatePuzzleImage(imageLoading: AbortablePromise<ImageBitmap>): Promise<boolean> {

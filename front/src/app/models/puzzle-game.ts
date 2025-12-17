@@ -1,4 +1,5 @@
 import type { Point } from './geometry';
+import type { PuzzleGameParameters } from './puzzle-game-parameters';
 import type { PointerId, Pointer, PinchToZoomInitialState, ViewportDragInitialState, PieceGroupDragInitialState, GroupSnapping, PuzzleEventListeners } from './puzzle-manipulation';
 import type { PuzzleSpritesheet } from './puzzle-spritesheet';
 import type { PuzzleSpritesheetParameters } from './puzzle-spritesheet-parameters';
@@ -87,16 +88,12 @@ export class PuzzleGame {
 
   constructor(
     private readonly wrapper: HTMLElement,
-    private readonly puzzleImage: ImageBitmap,
-    private readonly puzzleOffset: Point,
-    private readonly pieceSize: number,
-    private readonly horizontalPieceCount: number,
-    private readonly verticalPieceCount: number,
+    private readonly parameters: PuzzleGameParameters,
   ) {
-    this.puzzleWidth = this.pieceSize * this.horizontalPieceCount;
-    this.puzzleHeight = this.pieceSize * this.verticalPieceCount;
-    this.pieceMargin = Math.ceil(PieceShape.MarginFactor * this.pieceSize) + PieceShape.Parameters.strokeThickness;
-    this.pieceSpriteSize = this.pieceSize + this.pieceMargin * 2;
+    this.puzzleWidth = this.parameters.pieceSize * this.parameters.horizontalPieceCount;
+    this.puzzleHeight = this.parameters.pieceSize * this.parameters.verticalPieceCount;
+    this.pieceMargin = Math.ceil(PieceShape.MarginFactor * this.parameters.pieceSize) + PieceShape.Parameters.strokeThickness;
+    this.pieceSpriteSize = this.parameters.pieceSize + this.pieceMargin * 2;
 
     const playableAreaPadding = Math.max(this.puzzleWidth * 2, this.puzzleHeight * 2);
     this.playableAreaWidth = this.puzzleWidth + playableAreaPadding;
@@ -105,7 +102,7 @@ export class PuzzleGame {
       x: Math.round((this.playableAreaWidth - this.puzzleWidth) / 2),
       y: Math.round((this.playableAreaHeight - this.puzzleHeight) / 2),
     };
-    this.pieceSnappingMargin = Math.max(this.minimumPieceSnappingMargin, Math.ceil(this.pieceSize / 3.5));
+    this.pieceSnappingMargin = Math.max(this.minimumPieceSnappingMargin, Math.ceil(this.parameters.pieceSize / 3.5));
 
     this.canvas = document.createElement('canvas');
     this.canvas.classList.add('pixijs-canvas');
@@ -285,19 +282,15 @@ export class PuzzleGame {
 
   private async buildSpritesheet(): Promise<PuzzleSpritesheet> {
     // Cloning original image, so that we can transfer it to the worker, and still be able to use it on the frontend
-    const clonedImage = await createImageBitmap(this.puzzleImage);
+    const clonedImage = await createImageBitmap(this.parameters.puzzleImage);
 
     const { promise, resolve, reject } = Promise.withResolvers<PuzzleSpritesheet>();
     const worker = new Worker(new URL('./puzzle-spritesheet-worker', import.meta.url));
     worker.postMessage(
       {
-        image: clonedImage,
-        imageOffset: this.puzzleOffset,
-        pieceSize: this.pieceSize,
+        ...this.parameters,
         pieceMargin: this.pieceMargin,
         pieceSpriteSize: this.pieceSpriteSize,
-        horizontalPieceCount: this.horizontalPieceCount,
-        verticalPieceCount: this.verticalPieceCount,
       } satisfies PuzzleSpritesheetParameters,
       {
         transfer: [clonedImage],
@@ -328,9 +321,9 @@ export class PuzzleGame {
     });
     await this.application.renderer.prepare.upload(puzzleTexture);
 
-    for (let x = 0; x < this.horizontalPieceCount; x++) {
+    for (let x = 0; x < this.parameters.horizontalPieceCount; x++) {
       const pieceColumn = [];
-      for (let y = 0; y < this.verticalPieceCount; y++) {
+      for (let y = 0; y < this.parameters.verticalPieceCount; y++) {
         const pieceSprite = new PieceSprite(
           { x, y },
           this.pieceSpriteSize,
@@ -953,8 +946,8 @@ export class PuzzleGame {
 
   private getPieceGroupLockPosition(pieceGroup: PieceGroup): Point | undefined {
     const piece = pieceGroup.children[0];
-    const validX = (piece.cell.x * this.pieceSize) - this.pieceMargin;
-    const validY = (piece.cell.y * this.pieceSize) - this.pieceMargin;
+    const validX = (piece.cell.x * this.parameters.pieceSize) - this.pieceMargin;
+    const validY = (piece.cell.y * this.parameters.pieceSize) - this.pieceMargin;
     if (Math.abs(pieceGroup.x - validX) < this.pieceSnappingMargin && Math.abs(pieceGroup.y - validY) < this.pieceSnappingMargin) {
       return { x: validX, y: validY };
     }
@@ -973,8 +966,8 @@ export class PuzzleGame {
       for (const neighborOffset of neighborOffsets) {
         const neighborPiece = this.pieces.at(piece.cell.x + neighborOffset.x)?.at(piece.cell.y + neighborOffset.y);
         if (neighborPiece && neighborPiece.parent !== pieceGroup) {
-          const validX = neighborPiece.parent.x + neighborPiece.x - (this.pieceSize * neighborOffset.x) - piece.x;
-          const validY = neighborPiece.parent.y + neighborPiece.y - (this.pieceSize * neighborOffset.y) - piece.y;
+          const validX = neighborPiece.parent.x + neighborPiece.x - (this.parameters.pieceSize * neighborOffset.x) - piece.x;
+          const validY = neighborPiece.parent.y + neighborPiece.y - (this.parameters.pieceSize * neighborOffset.y) - piece.y;
           if (Math.abs(pieceGroup.x - validX) < this.pieceSnappingMargin && Math.abs(pieceGroup.y - validY) < this.pieceSnappingMargin) {
             return {
               pieceGroup: neighborPiece.parent,
