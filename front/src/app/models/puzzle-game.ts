@@ -326,7 +326,7 @@ export class PuzzleGame {
           { x, y },
           this.pieceSpriteSize,
           puzzleTexture,
-          spritesheet.alphaChannels[x][y],
+          spritesheet.alphaData,
         );
         const pieceGroup = new PieceGroup();
         pieceGroup.addChild(pieceSprite);

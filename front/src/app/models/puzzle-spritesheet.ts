@@ -1,4 +1,4 @@
 export type PuzzleSpritesheet = {
   image: ImageBitmap;
-  alphaChannels: Uint8ClampedArray[][][];
+  alphaData: Uint8ClampedArray;
 };

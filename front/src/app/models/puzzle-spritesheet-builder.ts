@@ -75,7 +75,7 @@ export class PuzzleSpritesheetBuilder {
     const spritesheetCanvas = new OffscreenCanvas(spritesheetWidth, spritesheetHeight);
     const spritesheetContext = Canvas.getOffscreenContext2D(spritesheetCanvas);
 
-    // build sprite for each pieces
+    // Build sprite for each pieces
     const spriteCanvas = new OffscreenCanvas(this.parameters.pieceSpriteSize, this.parameters.pieceSpriteSize);
     const spriteContext = Canvas.getOffscreenContext2D(spriteCanvas);
 
@@ -85,12 +85,12 @@ export class PuzzleSpritesheetBuilder {
 
         spriteContext.reset();
 
-        // outline for better "piece to piece" fit
+        // Outline for better "piece to piece" fit
         spriteContext.strokeStyle = PieceShape.Parameters.strokeColor;
         spriteContext.lineWidth = PieceShape.Parameters.strokeThickness;
         spriteContext.stroke(pieceShape.path);
 
-        // crop piece image
+        // Crop piece image
         const { sx, sy, sw, sh, dx, dy, dw, dh } = this.getPieceCropValues(x, y, pieceShape.x, pieceShape.y);
         spriteContext.clip(pieceShape.path);
         spriteContext.drawImage(this.parameters.image, sx, sy, sw, sh, dx, dy, dw, dh);
@@ -98,40 +98,20 @@ export class PuzzleSpritesheetBuilder {
       }
     }
 
-    // build piece alpha channels for each pieces
+    // Order matters, transferToImageBitamp() will clear the canvas, so getImageData() would no longer work after it
+    const rgbaData = spritesheetContext.getImageData(0, 0, spritesheetWidth, spritesheetHeight).data;
+    const image = spritesheetCanvas.transferToImageBitmap();
+
+    // Build alpha channel for each pixels
     const bytePerPixel = 4;
     const alphaChannelOffset = 3;
-    const spritesheetPixels = spritesheetContext.getImageData(0, 0, spritesheetWidth, spritesheetHeight).data;
-
-    const alphaChannels = Array.from(
-      Array(this.parameters.horizontalPieceCount),
-      () => Array.from(
-        Array<Uint8ClampedArray[]>(this.parameters.verticalPieceCount),
-        () => Array.from(
-          Array(this.parameters.pieceSpriteSize),
-          () => new Uint8ClampedArray(this.parameters.pieceSpriteSize),
-        ),
-      ),
-    );
-
-    for (let x = 0; x < this.parameters.horizontalPieceCount; x++) {
-      for (let y = 0; y < this.parameters.verticalPieceCount; y++) {
-        const spriteOriginX = x * this.parameters.pieceSpriteSize;
-        const spriteOriginY = y * this.parameters.pieceSpriteSize;
-
-        for (let spritePixelX = 0; spritePixelX < this.parameters.pieceSpriteSize; spritePixelX++) {
-          for (let spritePixelY = 0; spritePixelY < this.parameters.pieceSpriteSize; spritePixelY++) {
-            const spritesheetPixelX = spriteOriginX + spritePixelX;
-            const spritesheetPixelY = spriteOriginY + spritePixelY;
-
-            const pixelIndex = (spritesheetPixelX + spritesheetPixelY * spritesheetWidth) * bytePerPixel;
-            alphaChannels[x][y][spritePixelX][spritePixelY] = spritesheetPixels[pixelIndex + alphaChannelOffset];
-          }
-        }
-      }
+    const alphaData = new Uint8ClampedArray(rgbaData.byteLength / bytePerPixel);
+    let pixelIndex = 0;
+    for (let alphaIndex = alphaChannelOffset; alphaIndex < rgbaData.byteLength; alphaIndex += bytePerPixel) {
+      alphaData.fill(rgbaData[alphaIndex], pixelIndex, ++pixelIndex);
     }
 
-    return { image: spritesheetCanvas.transferToImageBitmap(), alphaChannels };
+    return { image, alphaData };
   }
 
   private getPieceCropValues(x: number, y: number, originX: number, originY: number): { sx: number; sy: number; sw: number; sh: number; dx: number; dy: number; dw: number; dh: number } {
