@@ -21,11 +21,11 @@ export class PuzzleFormComponent {
   private readonly router = inject(Router);
   private readonly currentPuzzleGameService = inject(CurrentPuzzleGameService);
 
-  public readonly isLoading = signal<boolean>(false);
-  public readonly puzzleImage = signal<ImageBitmap | null>(null);
-  public readonly puzzleSizeParameters = signal<PuzzleSizeParameters | null>(null);
+  protected readonly isLoading = signal<boolean>(false);
+  protected readonly puzzleImage = signal<ImageBitmap | null>(null);
+  protected readonly puzzleSizeParameters = signal<PuzzleSizeParameters | null>(null);
 
-  public async startPuzzle(): Promise<void> {
+  protected async startPuzzle(): Promise<void> {
     const puzzleImage = this.puzzleImage();
     const puzzleSizeParameters = this.puzzleSizeParameters();
     if (!puzzleImage || !puzzleSizeParameters) {

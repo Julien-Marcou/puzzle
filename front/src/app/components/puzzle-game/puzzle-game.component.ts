@@ -24,10 +24,11 @@ export class PuzzleGameComponent implements OnInit {
 
   private readonly puzzleGameWrapperRef = viewChild.required<ElementRef<HTMLElement>>('puzzleGameWrapper');
 
-  private puzzleGame?: PuzzleGame;
   public readonly puzzleGameParameters = input.required<PuzzleGameParameters>();
-  public readonly displayEndDialog = signal<boolean>(false);
-  public readonly gamePlayTime = signal<string>('');
+
+  private puzzleGame?: PuzzleGame;
+  protected readonly displayEndDialog = signal<boolean>(false);
+  protected readonly gamePlayTime = signal<string>('');
 
   public ngOnInit(): void {
     this.puzzleGame = new PuzzleGame(
@@ -49,7 +50,7 @@ export class PuzzleGameComponent implements OnInit {
     });
   }
 
-  public async exitPuzzle(): Promise<void> {
+  protected async exitPuzzle(): Promise<void> {
     if (this.puzzleGame) {
       this.puzzleGame.stop();
     }
@@ -61,7 +62,7 @@ export class PuzzleGameComponent implements OnInit {
     }
   }
 
-  public closeEndDialog(): void {
+  protected closeEndDialog(): void {
     this.displayEndDialog.set(false);
   }
 

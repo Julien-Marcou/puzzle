@@ -25,9 +25,9 @@ export class PuzzleSelectFieldComponent implements OnInit {
 
   private readonly puzzleFileInput = viewChild.required<ElementRef<HTMLInputElement>>('puzzleFileInput');
 
-  public readonly puzzleImageFolder = '/img/puzzles';
-  public readonly puzzleThumbnailFolder = '/img/puzzle-thumbnails';
-  public readonly puzzles = [
+  protected readonly puzzleImageFolder = '/img/puzzles';
+  protected readonly puzzleThumbnailFolder = '/img/puzzle-thumbnails';
+  protected readonly puzzles = [
     'the-great-wave-off-kanagawa.jpg',
     'mandalas-by-viscious-speed.jpg',
     'blue-marble-western-hemisphere-by-nasa.jpg',
@@ -54,12 +54,12 @@ export class PuzzleSelectFieldComponent implements OnInit {
     'tiger-by-pexels.jpg',
   ];
 
-  public readonly puzzleImage = signal<ImageBitmap | null>(null);
-  public readonly selectedPuzzle = signal<string | null>(null);
-  public readonly loadingPuzzle = signal<string | null>(null);
-  public readonly selectedCustomPuzzle = signal<string | null>(null);
-  public readonly loadingCustomPuzzle = signal<string | null>(null);
-  public readonly imageErrors = signal<ImageError[]>([]);
+  protected readonly puzzleImage = signal<ImageBitmap | null>(null);
+  protected readonly selectedPuzzle = signal<string | null>(null);
+  protected readonly loadingPuzzle = signal<string | null>(null);
+  protected readonly selectedCustomPuzzle = signal<string | null>(null);
+  protected readonly loadingCustomPuzzle = signal<string | null>(null);
+  protected readonly imageErrors = signal<ImageError[]>([]);
 
   public readonly puzzleImageLoading = output<boolean>();
   public readonly puzzleImageSelected = output<ImageBitmap>();
@@ -103,7 +103,7 @@ export class PuzzleSelectFieldComponent implements OnInit {
     });
   }
 
-  public async setPuzzle(puzzleImageUrl: string): Promise<void> {
+  protected async setPuzzle(puzzleImageUrl: string): Promise<void> {
     this.loadingPuzzle.set(puzzleImageUrl);
     const updated = await this.updatePuzzleImage(ImageLoader.loadFromUrl(`${this.puzzleImageFolder}/${puzzleImageUrl}`));
     this.loadingPuzzle.set(null);
@@ -113,7 +113,7 @@ export class PuzzleSelectFieldComponent implements OnInit {
     }
   }
 
-  public async setCustomPuzzle(event: Event): Promise<void> {
+  protected async setCustomPuzzle(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) {
@@ -185,7 +185,7 @@ export class PuzzleSelectFieldComponent implements OnInit {
     return success;
   }
 
-  public clearImageError(id: number): void {
+  protected clearImageError(id: number): void {
     window.clearTimeout(id);
     this.removeImageError(id);
   }
