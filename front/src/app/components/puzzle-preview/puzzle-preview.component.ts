@@ -37,7 +37,7 @@ export class PuzzlePreviewComponent {
   public readonly loading = input.required<boolean>();
 
   // Scale down the preview to match UI canvas size as we don't need the full resolution here
-  private readonly scale = computed<number>(() => {
+  private readonly previewScale = computed<number>(() => {
     const puzzleImage = this.puzzleImage();
     if (!puzzleImage) {
       return 1;
@@ -66,13 +66,12 @@ export class PuzzlePreviewComponent {
       const puzzleImage = this.puzzleImage();
       const puzzleImageCanvas = this.puzzleImageRef().nativeElement;
       const puzzleImageContext = this.puzzleImageContext();
+      const previewScale = this.previewScale();
       if (!puzzleImage || !puzzleImageContext) {
         return;
       }
-      const resizeWidth = Math.round(puzzleImage.width * this.scale());
-      const resizeHeight = Math.round(puzzleImage.height * this.scale());
       untracked(() => {
-        this.drawPuzzleImage(puzzleImageCanvas, puzzleImageContext, puzzleImage, resizeWidth, resizeHeight);
+        this.drawPuzzleImage(puzzleImageCanvas, puzzleImageContext, puzzleImage, previewScale);
       });
     });
 
@@ -83,22 +82,23 @@ export class PuzzlePreviewComponent {
       const verticalPieceCount = this.verticalPieceCount();
       const puzzleCutoutsCanvas = this.puzzleCutoutsRef().nativeElement;
       const puzzleCutoutsContext = this.puzzleCutoutsContext();
+      const previewScale = this.previewScale();
+      const puzzleOffset = this.puzzleOffset();
+      const pieceSize = this.pieceSize();
       if (!puzzleImage || !puzzleCutoutsContext) {
         return;
       }
-      const puzzleOffset = {
-        x: Math.round(this.puzzleOffset().x * this.scale()),
-        y: Math.round(this.puzzleOffset().y * this.scale()),
-      };
-      const pieceSize = Math.round(this.pieceSize() * this.scale());
       untracked(() => {
         this.updatePuzzleCutouts(
           puzzleCutoutsCanvas,
           puzzleCutoutsContext,
           {
             puzzleImage,
-            puzzleOffset,
-            pieceSize,
+            puzzleOffset: {
+              x: Math.round(puzzleOffset.x * previewScale),
+              y: Math.round(puzzleOffset.y * previewScale),
+            },
+            pieceSize: Math.round(pieceSize * previewScale),
             horizontalPieceCount,
             verticalPieceCount,
           },
@@ -107,7 +107,9 @@ export class PuzzlePreviewComponent {
     });
   }
 
-  private drawPuzzleImage(canvas: HTMLCanvasElement, context: CanvasRenderingContext2D, image: ImageBitmap, resizeWidth: number, resizeHeight: number): void {
+  private drawPuzzleImage(canvas: HTMLCanvasElement, context: CanvasRenderingContext2D, image: ImageBitmap, scale: number): void {
+    const resizeWidth = Math.round(image.width * scale);
+    const resizeHeight = Math.round(image.height * scale);
     canvas.width = resizeWidth;
     canvas.height = resizeHeight;
     context.reset();
