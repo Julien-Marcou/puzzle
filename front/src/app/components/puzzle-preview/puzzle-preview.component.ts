@@ -2,7 +2,7 @@ import type { Point } from '../../models/geometry';
 import type { PuzzleSizeParameters } from '../../models/puzzle-parameters';
 import type { ElementRef } from '@angular/core';
 
-import { ChangeDetectionStrategy, Component, computed, effect, input, untracked, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, input, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { Axis, VALID_AXES } from '../../models/geometry';
@@ -52,7 +52,7 @@ export class PuzzlePreviewComponent {
   private readonly verticalPatternContext = Canvas.getOffscreenContext2D(this.verticalPatternCanvas);
   private readonly middlePatternContext = Canvas.getOffscreenContext2D(this.middlePatternCanvas);
 
-  private renderingPreview = false;
+  private renderingPreviewRequestId?: number;
 
   // The rendering must be synchronous,
   // so that cancelling a new puzzle image loading and immediatly loading another one
@@ -67,9 +67,7 @@ export class PuzzlePreviewComponent {
       if (!puzzleImage || !puzzleImageContext) {
         return;
       }
-      untracked(() => {
-        this.drawPuzzleImage(puzzleImageCanvas, puzzleImageContext, puzzleImage, previewScale);
-      });
+      this.drawPuzzleImage(puzzleImageCanvas, puzzleImageContext, puzzleImage, previewScale);
     });
 
     // Draw puzzle cutouts on their own canvas for better performance
@@ -81,20 +79,18 @@ export class PuzzlePreviewComponent {
       if (!puzzleSizeParameters || !puzzleCutoutsContext) {
         return;
       }
-      untracked(() => {
-        this.updatePuzzleCutouts(
-          puzzleCutoutsCanvas,
-          puzzleCutoutsContext,
-          {
-            ...puzzleSizeParameters,
-            puzzleOffset: {
-              x: Math.round(puzzleSizeParameters.puzzleOffset.x * previewScale),
-              y: Math.round(puzzleSizeParameters.puzzleOffset.y * previewScale),
-            },
-            pieceSize: Math.round(puzzleSizeParameters.pieceSize * previewScale),
+      this.updatePuzzleCutouts(
+        puzzleCutoutsCanvas,
+        puzzleCutoutsContext,
+        {
+          ...puzzleSizeParameters,
+          puzzleOffset: {
+            x: Math.round(puzzleSizeParameters.puzzleOffset.x * previewScale),
+            y: Math.round(puzzleSizeParameters.puzzleOffset.y * previewScale),
           },
-        );
-      });
+          pieceSize: Math.round(puzzleSizeParameters.pieceSize * previewScale),
+        },
+      );
     });
   }
 
@@ -110,12 +106,11 @@ export class PuzzlePreviewComponent {
   private updatePuzzleCutouts(canvas: HTMLCanvasElement, context: CanvasRenderingContext2D, parameters: PuzzleSizeParameters): void {
     // Throttle the rendering so that we are not rendering it too often
     // (the user may change the puzzle size faster than the canvas is able to render it during one frame)
-    if (this.renderingPreview) {
-      return;
+    if (this.renderingPreviewRequestId !== undefined) {
+      cancelAnimationFrame(this.renderingPreviewRequestId);
     }
-    this.renderingPreview = true;
-    window.requestAnimationFrame(() => {
-      this.renderingPreview = false;
+    this.renderingPreviewRequestId = window.requestAnimationFrame(() => {
+      this.renderingPreviewRequestId = undefined;
       this.drawPuzzlePatterns(parameters);
       this.drawPuzzleCutouts(canvas, context, parameters);
     });
