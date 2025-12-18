@@ -1,17 +1,10 @@
+import { AbortError } from './error';
+
 export const enum PromiseState {
   Running = 'running',
   Resolved = 'resolved',
   Rejected = 'rejecte',
   Aborted = 'aborted',
-}
-
-export class AbortError extends Error {
-
-  constructor(message: string, options?: ErrorOptions) {
-    super(message, options);
-    this.name = 'AbortError';
-  }
-
 }
 
 export type AbortableExecutor<T> = (

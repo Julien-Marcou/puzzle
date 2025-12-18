@@ -3,26 +3,9 @@ import type { ElementRef, OnInit } from '@angular/core';
 
 import { ChangeDetectionStrategy, Component, effect, output, signal, viewChild } from '@angular/core';
 
-import { FileFetchError, FileReadError, ImageCreateError, ImageLoader } from '../../utils/image-loader';
+import { ImageTooBigError, ImageTooSmallError, FileReadError, FileFetchError, ImageCreateError } from '../../models/error';
+import { ImageLoader } from '../../utils/image-loader';
 import { CheckmarkSpinnerComponent } from '../checkmark-spinner/checkmark-spinner.component';
-
-class ImageTooBigError extends Error {
-
-  constructor(message: string, options?: ErrorOptions) {
-    super(message, options);
-    this.name = 'ImageTooBigError';
-  }
-
-}
-
-class ImageTooSmallError extends Error {
-
-  constructor(message: string, options?: ErrorOptions) {
-    super(message, options);
-    this.name = 'ImageTooSmallError';
-  }
-
-}
 
 type ImageErrorType = 'unknown' | 'too-heavy' | 'too-small' | 'too-big' | 'file-read' | 'file-fetch' | 'image-create';
 

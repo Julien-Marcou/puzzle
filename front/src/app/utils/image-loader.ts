@@ -1,30 +1,5 @@
 import { AbortablePromise } from '../models/abortable-promise';
-
-export class FileReadError extends Error {
-
-  constructor(message: string, options?: ErrorOptions) {
-    super(message, options);
-    this.name = 'FileReadError';
-  }
-
-}
-export class FileFetchError extends Error {
-
-  constructor(message: string, options?: ErrorOptions) {
-    super(message, options);
-    this.name = 'FileFetchError';
-  }
-
-}
-
-export class ImageCreateError extends Error {
-
-  constructor(message: string, options?: ErrorOptions) {
-    super(message, options);
-    this.name = 'ImageCreateError';
-  }
-
-}
+import { FileFetchError, FileReadError, ImageCreateError } from '../models/error';
 
 export class ImageLoader {
 
