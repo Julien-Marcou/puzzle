@@ -1,23 +1,18 @@
 <div class="thumbnails">
   @for (puzzle of puzzles; track puzzle) {
-    <button
-      class="thumbnail"
-      type="button"
-      [class.active]="!loadingPuzzle() && selectedPuzzle() === puzzle"
-      [class.loading]="loadingPuzzle() === puzzle"
-      [disabled]="(!loadingPuzzle() && selectedPuzzle() === puzzle) || loadingPuzzle() === puzzle"
-      (click)="setPuzzle(puzzle)"
-    >
+    @let isActive = !puzzleImageLoading() && puzzleId() === puzzle;
+    @let isLoading = puzzleIdLoading() === puzzle;
+    <button class="thumbnail" type="button" [class.active]="isActive" [class.loading]="isLoading" [disabled]="isActive || isLoading" (click)="setPuzzle(puzzle)">
       <img class="thumbnail-image" src="{{ puzzleThumbnailFolder + '/' + puzzle }}" alt="Puzzle: {{ puzzle }}" />
       <div class="thumbnail-marker">
-        <app-checkmark-spinner [complete]="selectedPuzzle() === puzzle" />
+        <app-checkmark-spinner [complete]="isActive" />
       </div>
     </button>
   }
 </div>
 
 <label class="select-file-button" for="puzzle-file-input">
-  <input [attr.title]="selectedCustomPuzzle() ?? null" class="file-input" id="puzzle-file-input" type="file" (input)="setCustomPuzzle($event)" multiple="false" #puzzleFileInput />
+  <input class="file-input" id="puzzle-file-input" type="file" (input)="setCustomPuzzle($event)" multiple="false" #puzzleFileInput />
   <div class="file-button">
     <div class="icon">
       <span class="material-icons" aria-hidden="true">file_upload</span>

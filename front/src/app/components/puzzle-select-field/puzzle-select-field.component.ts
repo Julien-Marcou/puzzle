@@ -1,7 +1,7 @@
 import type { AbortablePromise } from '../../models/abortable-promise';
 import type { ElementRef, OnInit } from '@angular/core';
 
-import { ChangeDetectionStrategy, Component, effect, model, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, model, signal, viewChild } from '@angular/core';
 
 import { ImageTooBigError, ImageTooSmallError, FileReadError, FileFetchError, ImageCreateError } from '../../models/error';
 import { ImageLoader } from '../../utils/image-loader';
@@ -54,13 +54,11 @@ export class PuzzleSelectFieldComponent implements OnInit {
     'tiger-by-pexels.jpg',
   ];
 
+  public readonly puzzleId = model.required<string | null>();
   public readonly puzzleImage = model.required<ImageBitmap | null>();
   public readonly puzzleImageLoading = model.required<boolean>();
 
-  protected readonly selectedPuzzle = signal<string | null>(null);
-  protected readonly loadingPuzzle = signal<string | null>(null);
-  protected readonly selectedCustomPuzzle = signal<string | null>(null);
-  protected readonly loadingCustomPuzzle = signal<string | null>(null);
+  protected readonly puzzleIdLoading = signal<string | null>(null);
   protected readonly imageErrors = signal<ImageError[]>([]);
 
   protected readonly maxFileSize = 15; // In Megabytes
@@ -71,12 +69,6 @@ export class PuzzleSelectFieldComponent implements OnInit {
 
   private readonly imageErrorDelay = 5000; // In milliseconds
   private imageLoading?: AbortablePromise<ImageBitmap>;
-
-  constructor() {
-    effect(() => {
-      this.puzzleImageLoading.set(!!this.loadingPuzzle() || !!this.loadingCustomPuzzle());
-    });
-  }
 
   public ngOnInit(): void {
     this.puzzleFileInput().nativeElement.addEventListener('dragover', () => {
@@ -89,18 +81,23 @@ export class PuzzleSelectFieldComponent implements OnInit {
       this.puzzleFileInput().nativeElement.classList.remove('drop');
     }, { passive: true });
 
-    this.setPuzzle(this.puzzles[0]).catch((error: unknown) => {
-      console.error(error);
-    });
+    if (!this.puzzleImage()) {
+      this.setPuzzle(this.puzzles[0]).catch((error: unknown) => {
+        console.error(error);
+      });
+    }
   }
 
-  protected async setPuzzle(puzzleImageUrl: string): Promise<void> {
-    this.loadingPuzzle.set(puzzleImageUrl);
-    const updated = await this.updatePuzzleImage(ImageLoader.loadFromUrl(`${this.puzzleImageFolder}/${puzzleImageUrl}`));
-    this.loadingPuzzle.set(null);
+  protected async setPuzzle(puzzleId: string): Promise<void> {
+    this.puzzleImageLoading.set(true);
+    this.puzzleIdLoading.set(puzzleId);
+
+    const updated = await this.updatePuzzleImage(ImageLoader.loadFromUrl(`${this.puzzleImageFolder}/${puzzleId}`));
+
+    this.puzzleImageLoading.set(false);
+    this.puzzleIdLoading.set(null);
     if (updated) {
-      this.selectedPuzzle.set(puzzleImageUrl);
-      this.selectedCustomPuzzle.set(null);
+      this.puzzleId.set(puzzleId);
     }
   }
 
@@ -117,12 +114,17 @@ export class PuzzleSelectFieldComponent implements OnInit {
       return;
     }
 
-    this.loadingCustomPuzzle.set(file.name);
+    const puzzleId = crypto.randomUUID();
+
+    this.puzzleImageLoading.set(true);
+    this.puzzleIdLoading.set(puzzleId);
+
     const updated = await this.updatePuzzleImage(ImageLoader.loadFromFile(file));
-    this.loadingCustomPuzzle.set(null);
+
+    this.puzzleImageLoading.set(false);
+    this.puzzleIdLoading.set(null);
     if (updated) {
-      this.selectedPuzzle.set(null);
-      this.selectedCustomPuzzle.set(file.name);
+      this.puzzleId.set(puzzleId);
     }
   }
 

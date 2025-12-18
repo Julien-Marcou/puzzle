@@ -1,6 +1,6 @@
 import type { PuzzleSizeParameters } from '../../models/puzzle-parameters';
 
-import { ChangeDetectionStrategy, Component, effect, input, model, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, input, model, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { AXIS_TO_DIMENSION, VALID_AXES } from '../../models/geometry';
@@ -26,6 +26,8 @@ export class PuzzleSizeFieldComponent {
   protected readonly selectedPieceSizeIndex = signal<number>(0);
   protected readonly validPieceSizes = signal<number[]>([this.minPieceSizeConstraint, this.maxPieceSizeConstraint]);
 
+  private tryRestoringPreviousPieceSize = true;
+
   constructor() {
     effect(() => {
       const puzzleImage = this.puzzleImage();
@@ -33,6 +35,14 @@ export class PuzzleSizeFieldComponent {
         return;
       }
       this.updateValidPieceSizes(puzzleImage);
+    });
+
+    effect(() => {
+      const validPieceSizes = this.validPieceSizes();
+      untracked(() => {
+        const previousPieceSize = this.puzzleSizeParameters()?.pieceSize;
+        this.updateSelectedPieceSizeIndex(validPieceSizes, previousPieceSize);
+      });
     });
 
     effect(() => {
@@ -79,7 +89,20 @@ export class PuzzleSizeFieldComponent {
     }
 
     this.validPieceSizes.set(validPieceSizes);
-    this.selectedPieceSizeIndex.set(Math.floor(validPieceSizes.length / 4));
+  }
+
+  private updateSelectedPieceSizeIndex(validPieceSizes: number[], previousPieceSize?: number): void {
+    const previousPieceSizeIndex = validPieceSizes.findIndex((pieceSize) => pieceSize === previousPieceSize);
+    const defaultPieceSizeIndex = Math.floor(validPieceSizes.length / 4);
+
+    // If the user comes from a previous game, we try to restore what piece size they had chosen
+    if (this.tryRestoringPreviousPieceSize) {
+      this.tryRestoringPreviousPieceSize = false;
+      this.selectedPieceSizeIndex.set(previousPieceSizeIndex === -1 ? defaultPieceSizeIndex : previousPieceSizeIndex);
+    }
+    else {
+      this.selectedPieceSizeIndex.set(defaultPieceSizeIndex);
+    }
   }
 
   private updatePuzzleSizeParameters(puzzleImage: ImageBitmap, pieceSize: number): void {
