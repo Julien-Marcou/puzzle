@@ -1,4 +1,4 @@
-import type { PuzzleGameParameters } from '../models/puzzle-game-parameters';
+import type { PuzzleGameParameters, PuzzleSizeParameters } from '../models/puzzle-parameters';
 
 import { Injectable } from '@angular/core';
 
@@ -9,8 +9,8 @@ export class CurrentPuzzleGameService {
 
   private parameters?: PuzzleGameParameters;
 
-  public setParameters(parameters: PuzzleGameParameters): void {
-    this.parameters = parameters;
+  public setParameters(puzzleImage: ImageBitmap, puzzleSizeParameters: PuzzleSizeParameters): void {
+    this.parameters = { puzzleImage, ...puzzleSizeParameters };
   }
 
   public getParameters(): PuzzleGameParameters | undefined {

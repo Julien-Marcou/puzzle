@@ -97,9 +97,10 @@ export class PuzzleSelectFieldComponent implements OnInit {
 
     effect(() => {
       const puzzleImage = this.puzzleImage();
-      if (puzzleImage) {
-        this.puzzleImageSelected.emit(puzzleImage);
+      if (!puzzleImage) {
+        return;
       }
+      this.puzzleImageSelected.emit(puzzleImage);
     });
   }
 

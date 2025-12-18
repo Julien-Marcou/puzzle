@@ -1,4 +1,4 @@
-import type { PuzzleGameParameters } from '../../models/puzzle-game-parameters';
+import type { PuzzleGameParameters } from '../../models/puzzle-parameters';
 import type { ElementRef, OnInit } from '@angular/core';
 
 import { Location } from '@angular/common';

@@ -1,8 +1,7 @@
 import type { Point } from './geometry';
-import type { PuzzleGameParameters } from './puzzle-game-parameters';
 import type { PointerId, Pointer, PinchToZoomInitialState, ViewportDragInitialState, PieceGroupDragInitialState, GroupSnapping, PuzzleEventListeners } from './puzzle-manipulation';
+import type { PuzzleGameParameters, PuzzleSpritesheetParameters } from './puzzle-parameters';
 import type { PuzzleSpritesheet } from './puzzle-spritesheet';
-import type { PuzzleSpritesheetParameters } from './puzzle-spritesheet-parameters';
 
 import { isDevMode } from '@angular/core';
 import { AbstractRenderer, Application, Container, Graphics, ImageSource, Text } from 'pixi.js';

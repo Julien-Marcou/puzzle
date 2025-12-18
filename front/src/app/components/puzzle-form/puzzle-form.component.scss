@@ -51,31 +51,3 @@
     }
   }
 }
-
-.puzzle-size-parameter {
-  .puzzle-size-input {
-    display: block;
-    width: 400px;
-    max-width: 100%;
-  }
-
-  .puzzle-size-output {
-    display: block;
-    width: 400px;
-    max-width: 100%;
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    margin-top: 0.5rem;
-
-    .min-value {
-      text-align: left;
-    }
-    .current-value {
-      text-align: center;
-      font-weight: bold;
-    }
-    .max-value {
-      text-align: right;
-    }
-  }
-}

@@ -11,33 +11,12 @@
 
     <div class="puzzle-size-parameter">
       <div class="label">Taille du puzzle :</div>
-      <input
-        autocomplete="off"
-        class="puzzle-size-input"
-        [(ngModel)]="selectedPieceSizeIndex"
-        [disabled]="isLoading() || !puzzleImage()"
-        type="range"
-        step="1"
-        min="0"
-        [max]="validPieceSizes().length - 1"
-      />
-      <div class="puzzle-size-output">
-        <span class="min-value"> Petit </span>
-        <span class="current-value"> {{ horizontalPieceCount() }}x{{ verticalPieceCount() }} ({{ horizontalPieceCount() * verticalPieceCount() }} pièces) </span>
-        <span class="max-value"> Grand </span>
-      </div>
+      <app-puzzle-size-field [loading]="isLoading()" [puzzleImage]="puzzleImage()" (puzzleSizeParametersChange)="puzzleSizeParameters.set($event)" />
     </div>
 
     <div class="puzzle-preview">
       <div class="label">Preview du puzzle :</div>
-      <app-puzzle-preview
-        [loading]="isLoading()"
-        [puzzleImage]="puzzleImage()"
-        [puzzleOffset]="puzzleOffset()"
-        [pieceSize]="pieceSize()"
-        [horizontalPieceCount]="horizontalPieceCount()"
-        [verticalPieceCount]="verticalPieceCount()"
-      />
+      <app-puzzle-preview [loading]="isLoading()" [puzzleImage]="puzzleImage()" [puzzleSizeParameters]="puzzleSizeParameters()" />
     </div>
   </div>
 

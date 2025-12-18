@@ -1,6 +1,6 @@
 import type { Edge } from '../models/edge';
+import type { PuzzleSpritesheetParameters } from '../models/puzzle-parameters';
 import type { PuzzleSpritesheet } from '../models/puzzle-spritesheet';
-import type { PuzzleSpritesheetParameters } from '../models/puzzle-spritesheet-parameters';
 
 import { Canvas } from './canvas';
 import { Axis } from '../models/geometry';

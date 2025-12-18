@@ -1,4 +1,4 @@
-import type { PuzzleGameParameters } from '../models/puzzle-game-parameters';
+import type { PuzzleGameParameters } from '../models/puzzle-parameters';
 import type { ResolveFn } from '@angular/router';
 
 import { inject } from '@angular/core';

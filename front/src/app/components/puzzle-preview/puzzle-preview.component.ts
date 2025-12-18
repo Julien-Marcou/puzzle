@@ -1,5 +1,5 @@
 import type { Point } from '../../models/geometry';
-import type { PuzzleGameParameters } from '../../models/puzzle-game-parameters';
+import type { PuzzleSizeParameters } from '../../models/puzzle-parameters';
 import type { ElementRef } from '@angular/core';
 
 import { ChangeDetectionStrategy, Component, computed, effect, input, untracked, viewChild } from '@angular/core';
@@ -29,12 +29,9 @@ export class PuzzlePreviewComponent {
   private readonly puzzleImageContext = computed(() => this.puzzleImageRef().nativeElement.getContext('2d'));
   private readonly puzzleCutoutsContext = computed(() => this.puzzleCutoutsRef().nativeElement.getContext('2d'));
 
-  public readonly puzzleImage = input.required<ImageBitmap | null>();
-  public readonly puzzleOffset = input.required<Point>();
-  public readonly pieceSize = input.required<number>();
-  public readonly horizontalPieceCount = input.required<number>();
-  public readonly verticalPieceCount = input.required<number>();
   public readonly loading = input.required<boolean>();
+  public readonly puzzleImage = input.required<ImageBitmap | null>();
+  public readonly puzzleSizeParameters = input.required<PuzzleSizeParameters | null>();
 
   // Scale down the preview to match UI canvas size as we don't need the full resolution here
   private readonly previewScale = computed<number>(() => {
@@ -77,15 +74,11 @@ export class PuzzlePreviewComponent {
 
     // Draw puzzle cutouts on their own canvas for better performance
     effect(() => {
-      const puzzleImage = this.puzzleImage();
-      const horizontalPieceCount = this.horizontalPieceCount();
-      const verticalPieceCount = this.verticalPieceCount();
+      const puzzleSizeParameters = this.puzzleSizeParameters();
       const puzzleCutoutsCanvas = this.puzzleCutoutsRef().nativeElement;
       const puzzleCutoutsContext = this.puzzleCutoutsContext();
       const previewScale = this.previewScale();
-      const puzzleOffset = this.puzzleOffset();
-      const pieceSize = this.pieceSize();
-      if (!puzzleImage || !puzzleCutoutsContext) {
+      if (!puzzleSizeParameters || !puzzleCutoutsContext) {
         return;
       }
       untracked(() => {
@@ -93,14 +86,12 @@ export class PuzzlePreviewComponent {
           puzzleCutoutsCanvas,
           puzzleCutoutsContext,
           {
-            puzzleImage,
+            ...puzzleSizeParameters,
             puzzleOffset: {
-              x: Math.round(puzzleOffset.x * previewScale),
-              y: Math.round(puzzleOffset.y * previewScale),
+              x: Math.round(puzzleSizeParameters.puzzleOffset.x * previewScale),
+              y: Math.round(puzzleSizeParameters.puzzleOffset.y * previewScale),
             },
-            pieceSize: Math.round(pieceSize * previewScale),
-            horizontalPieceCount,
-            verticalPieceCount,
+            pieceSize: Math.round(puzzleSizeParameters.pieceSize * previewScale),
           },
         );
       });
@@ -116,7 +107,7 @@ export class PuzzlePreviewComponent {
     context.drawImage(image, 0, 0, image.width, image.height, 0, 0, resizeWidth, resizeHeight);
   }
 
-  private updatePuzzleCutouts(canvas: HTMLCanvasElement, context: CanvasRenderingContext2D, parameters: PuzzleGameParameters): void {
+  private updatePuzzleCutouts(canvas: HTMLCanvasElement, context: CanvasRenderingContext2D, parameters: PuzzleSizeParameters): void {
     // Throttle the rendering so that we are not rendering it too often
     // (the user may change the puzzle size faster than the canvas is able to render it during one frame)
     if (this.renderingPreview) {
@@ -130,7 +121,7 @@ export class PuzzlePreviewComponent {
     });
   }
 
-  private drawPuzzleCutouts(canvas: HTMLCanvasElement, context: CanvasRenderingContext2D, parameters: PuzzleGameParameters): void {
+  private drawPuzzleCutouts(canvas: HTMLCanvasElement, context: CanvasRenderingContext2D, parameters: PuzzleSizeParameters): void {
     const patterns = this.getPatterns(parameters);
 
     // Don't use the parameters.puzzleImage to avoid rounding issues
@@ -229,7 +220,7 @@ export class PuzzlePreviewComponent {
     context.restore();
   }
 
-  private drawPuzzlePatterns(parameters: PuzzleGameParameters): void {
+  private drawPuzzlePatterns(parameters: PuzzleSizeParameters): void {
     // Reset pattern canvases
     this.horizontalPatternContext.reset();
     this.horizontalPatternCanvas.width = parameters.pieceSize;
@@ -324,7 +315,7 @@ export class PuzzlePreviewComponent {
     }
   }
 
-  private getPatterns(parameters: PuzzleGameParameters): Record<'horizontal' | 'vertical' | 'middle', CanvasPattern> {
+  private getPatterns(parameters: PuzzleSizeParameters): Record<'horizontal' | 'vertical' | 'middle', CanvasPattern> {
     const middle = Math.round(parameters.pieceSize / 2);
 
     // Horizontal pattern

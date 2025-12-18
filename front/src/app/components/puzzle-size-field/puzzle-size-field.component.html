@@ -1,0 +1,21 @@
+<input
+  autocomplete="off"
+  class="puzzle-size-input"
+  [(ngModel)]="selectedPieceSizeIndex"
+  [disabled]="loading()"
+  type="range"
+  step="1"
+  min="0"
+  [max]="validPieceSizes().length - 1"
+/>
+
+<div class="puzzle-size-output">
+  <span class="min-value"> Petit </span>
+  @if (puzzleSizeParameters(); as puzzleSizeParameters) {
+    <span class="current-value">
+      <span> {{ puzzleSizeParameters.horizontalPieceCount }}x{{ puzzleSizeParameters.verticalPieceCount }} </span>
+      <span>({{ puzzleSizeParameters.horizontalPieceCount * puzzleSizeParameters.verticalPieceCount }} pièces)</span>
+    </span>
+  }
+  <span class="max-value"> Grand </span>
+</div>
