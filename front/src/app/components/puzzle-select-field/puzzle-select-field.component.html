@@ -1,0 +1,56 @@
+<div class="thumbnails">
+  @for (puzzle of puzzles; track puzzle) {
+    <button
+      class="thumbnail"
+      type="button"
+      [class.active]="!loadingPuzzle() && selectedPuzzle() === puzzle"
+      [class.loading]="loadingPuzzle() === puzzle"
+      [disabled]="(!loadingPuzzle() && selectedPuzzle() === puzzle) || loadingPuzzle() === puzzle"
+      (click)="setPuzzle(puzzle)"
+    >
+      <img class="thumbnail-image" src="{{ puzzleThumbnailFolder + '/' + puzzle }}" alt="Puzzle: {{ puzzle }}" />
+      <div class="thumbnail-marker">
+        <app-checkmark-spinner [complete]="selectedPuzzle() === puzzle" />
+      </div>
+    </button>
+  }
+</div>
+
+<label class="select-file-button" for="puzzle-file-input">
+  <input [attr.title]="selectedCustomPuzzle() ?? null" class="file-input" id="puzzle-file-input" type="file" (input)="setCustomPuzzle($event)" multiple="false" #puzzleFileInput />
+  <div class="file-button">
+    <div class="icon">
+      <span class="material-icons" aria-hidden="true">file_upload</span>
+    </div>
+    <div class="text">Choisir une image</div>
+    <div class="condition">(max. 4096×4096)</div>
+  </div>
+</label>
+
+@for (imageError of imageErrors(); track imageError.id) {
+  <button type="button" class="image-error" (click)="clearImageError(imageError.id)">
+    @switch (imageError.type) {
+      @case ('too-heavy') {
+        L'image choisie est trop lourde. Elle doit faire au maximum {{ maxFileSize }}Mo.
+      }
+      @case ('too-small') {
+        L'image choisie est trop petite. Elle doit faire au minimum {{ minPuzzleImageWidth }} par {{ minPuzzleImageHeight }} pixels.
+      }
+      @case ('too-big') {
+        L'image choisie est trop grande. Elle doit faire au maximum {{ maxPuzzleImageWidth }} par {{ maxPuzzleImageHeight }} pixels.
+      }
+      @case ('file-read') {
+        Une erreur est survenue pendant le lecture de l'image.
+      }
+      @case ('file-fetch') {
+        Une erreur est survenue pendant le téléchargement de l'image.
+      }
+      @case ('image-create') {
+        Une erreur est survenue pendant le chargement de l'image.
+      }
+      @default {
+        Une erreur inattendue s'est produite.
+      }
+    }
+  </button>
+}

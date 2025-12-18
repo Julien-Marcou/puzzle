@@ -52,65 +52,6 @@
   }
 }
 
-.puzzle-image-parameter {
-  .thumbnails {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    grid-gap: 1rem;
-  }
-}
-
-.select-file-button {
-  display: block;
-  cursor: pointer;
-  position: relative;
-  margin: 0 auto;
-  max-width: 300px;
-  margin-top: 2rem;
-
-  .file-input {
-    cursor: pointer;
-    opacity: 0;
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    height: 100%;
-    border-radius: 5px;
-
-    &::file-selector-button {
-      pointer-events: none;
-    }
-  }
-
-  .file-button {
-    pointer-events: none;
-    padding: 1rem;
-    border: 2px solid #eee;
-    background-color: transparent;
-    border-radius: 5px;
-    text-align: center;
-
-    .condition {
-      font-size: 0.7rem;
-      color: #bbb;
-      margin-top: 0.4rem;
-    }
-  }
-
-  .file-input:hover + .file-button,
-  .file-input:focus-visible + .file-button {
-    border-color: #666;
-  }
-
-  .file-input.drop + .file-button {
-    border-color: #666;
-    border-style: dashed;
-  }
-}
-
 .puzzle-size-parameter {
   .puzzle-size-input {
     display: block;

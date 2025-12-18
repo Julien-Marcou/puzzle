@@ -1,0 +1,135 @@
+@keyframes slideIn {
+  0% {
+    transform: translate(-50%, calc(-100% - 2rem));
+  }
+  100% {
+    transform: translate(-50%, 0);
+  }
+}
+
+:host {
+  display: block;
+}
+
+.thumbnails {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  grid-gap: 1rem;
+}
+
+.thumbnail {
+  cursor: pointer;
+  position: relative;
+  padding: 0.5rem;
+  border: 2px solid #eee;
+  background-color: transparent;
+  border-radius: 5px;
+  overflow: hidden;
+
+  .thumbnail-image {
+    pointer-events: none;
+    display: block;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 3px;
+    object-fit: cover;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .thumbnail-marker {
+    pointer-events: none;
+    position: absolute;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(255, 255, 255, 0.6);
+  }
+
+  &.active,
+  &.loading {
+    .thumbnail-marker {
+      display: grid;
+    }
+  }
+
+  &:hover,
+  &:focus-visible {
+    border-color: #666;
+  }
+
+  &[disabled] {
+    cursor: default;
+  }
+}
+
+.select-file-button {
+  display: block;
+  cursor: pointer;
+  position: relative;
+  margin: 0 auto;
+  max-width: 300px;
+  margin-top: 2rem;
+
+  .file-input {
+    cursor: pointer;
+    opacity: 0;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 5px;
+
+    &::file-selector-button {
+      pointer-events: none;
+    }
+  }
+
+  .file-button {
+    pointer-events: none;
+    padding: 1rem;
+    border: 2px solid #eee;
+    background-color: transparent;
+    border-radius: 5px;
+    text-align: center;
+
+    .condition {
+      font-size: 0.7rem;
+      color: #bbb;
+      margin-top: 0.4rem;
+    }
+  }
+
+  .file-input:hover + .file-button,
+  .file-input:focus-visible + .file-button {
+    border-color: #666;
+  }
+
+  .file-input.drop + .file-button {
+    border-color: #666;
+    border-style: dashed;
+  }
+}
+
+.image-error {
+  position: fixed;
+  z-index: 10;
+  top: 1rem;
+  left: 50%;
+  max-width: 500px;
+  width: calc(100% - 4rem);
+  padding: 1rem;
+  background-color: #fff6f6;
+  color: #f80000;
+  box-shadow: 0 3px 5px 3px rgba(160, 0, 0, 0.2);
+  text-align: center;
+  transition: all 0.2s ease-in-out;
+  animation: slideIn ease-in-out 200ms forwards;
+}
