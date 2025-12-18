@@ -130,7 +130,6 @@ export class PuzzleGame {
     this.viewportContainer.addChild(this.border);
     this.viewportContainer.addChild(puzzleArea);
     this.viewportContainer.addChild(this.pieceContainer);
-    this.viewportContainer.visible = false;
     this.viewportContainer.interactive = false;
 
     this.application = new Application();
@@ -143,6 +142,7 @@ export class PuzzleGame {
 
   public async start(): Promise<void> {
     try {
+      // Init the pixijs application
       await this.application.init({
         canvas: this.canvas,
         width: this.wrapper.clientWidth,
@@ -154,25 +154,24 @@ export class PuzzleGame {
         manageImports: false,
       });
 
-      // Render first frame with loading text
-      if (environment.showFpsGraph) {
-        this.displayFpsGraph();
-      }
-      await this.renderFrame();
+      // Render first frame to avoid black screen during loading
+      this.application.render();
 
-      // Waiting for piece sprites to be ready
-      const spritesheet = await this.buildSpritesheet();
-      await this.addPieces(spritesheet);
+      // Build spritesheet
+      const { puzzleTexture, alphaData } = await this.buildSpritesheet();
 
-      // Switch from loading text to puzzle view
-      this.viewportContainer.visible = true;
-      await this.renderFrame();
+      // Add puzzle pieces
+      this.addPieces(puzzleTexture, alphaData);
 
       // Start events & render loop
       this.resizeObserver.observe(this.wrapper);
       this.startGameEventListeners();
       this.application.start();
       this.startPlayTime();
+
+      if (environment.showFpsGraph) {
+        this.displayFpsGraph();
+      }
     }
     catch (error) {
       console.error(error);
@@ -192,15 +191,6 @@ export class PuzzleGame {
     }
   }
 
-  private async renderFrame(): Promise<void> {
-    this.application.render();
-    await new Promise<void>((resolve) => {
-      window.requestAnimationFrame(() => {
-        resolve();
-      });
-    });
-  }
-
   private displayFpsGraph(): void {
     const fpsGraph = new FpsGraph(this.application.ticker);
     fpsGraph.x = 10;
@@ -208,12 +198,14 @@ export class PuzzleGame {
     this.application.stage.addChild(fpsGraph);
   }
 
-  private async buildSpritesheet(): Promise<PuzzleSpritesheet> {
+  private async buildSpritesheet(): Promise<{ puzzleTexture: ImageSource; alphaData: Uint8ClampedArray }> {
     // Cloning original image, so that we can transfer it to the worker, and still be able to use it on the frontend
     const clonedImage = await createImageBitmap(this.parameters.puzzleImage);
 
-    const { promise, resolve, reject } = Promise.withResolvers<PuzzleSpritesheet>();
+    // Create worker
     const worker = new Worker(new URL('../utils/puzzle-spritesheet-worker', import.meta.url));
+
+    // Push task
     worker.postMessage(
       {
         ...this.parameters,
@@ -224,22 +216,22 @@ export class PuzzleGame {
         transfer: [clonedImage],
       },
     );
-    worker.onmessage = ({ data }: MessageEvent<PuzzleSpritesheet | null>): void => {
-      if (data) {
-        resolve(data);
-        worker.terminate();
-      }
-      else {
-        reject(new Error('Spritesheet build error'));
-      }
-    };
 
-    return await promise;
-  }
+    // Wait for result
+    const { image, alphaData } = await new Promise<PuzzleSpritesheet>((resolve, reject) => {
+      worker.onmessage = ({ data }: MessageEvent<PuzzleSpritesheet | null>): void => {
+        if (data) {
+          resolve(data);
+        }
+        else {
+          reject(new Error('Spritesheet build error'));
+        }
+      };
+    });
 
-  private async addPieces(spritesheet: PuzzleSpritesheet): Promise<void> {
+    // Convert spritesheet to pixijs texture
     const puzzleTexture = new ImageSource({
-      resource: spritesheet.image,
+      resource: image,
       autoGenerateMipmaps: true,
       resolution: 1,
       minFilter: 'linear',
@@ -250,6 +242,15 @@ export class PuzzleGame {
     });
     await this.application.renderer.prepare.upload(puzzleTexture);
 
+    // Cleanup resources
+    worker.terminate();
+    clonedImage.close();
+    image.close();
+
+    return { puzzleTexture, alphaData };
+  }
+
+  private addPieces(puzzleTexture: ImageSource, alphaData: Uint8ClampedArray): void {
     for (let x = 0; x < this.parameters.horizontalPieceCount; x++) {
       const pieceColumn = [];
       for (let y = 0; y < this.parameters.verticalPieceCount; y++) {
@@ -257,7 +258,7 @@ export class PuzzleGame {
           { x, y },
           this.pieceSpriteSize,
           puzzleTexture,
-          spritesheet.alphaData,
+          alphaData,
         );
         const pieceGroup = new PieceGroup();
         pieceGroup.addChild(pieceSprite);
