@@ -13,7 +13,7 @@ export class PieceShape {
     tabOverflowVariance: 8,
     tabRecessVariance: 2,
     strokeColor: '#fff',
-    strokeThickness: 1,
+    strokeThickness: 2,
   };
 
   public static readonly MarginFactor = (this.Parameters.tabOverflow + this.Parameters.tabOverflowVariance + 1) / 100;

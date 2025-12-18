@@ -2,7 +2,7 @@ import type { PieceSprite } from './piece-sprite';
 import type { Point } from '../models/geometry';
 
 import { OutlineFilter } from 'pixi-filters';
-import { AbstractRenderer, Container } from 'pixi.js';
+import { Container } from 'pixi.js';
 
 export class PieceGroup extends Container<PieceSprite> {
 
@@ -40,17 +40,14 @@ export class PieceGroup extends Container<PieceSprite> {
       new OutlineFilter({
         thickness: 2,
         color: 0x000000,
-        quality: 0.1,
+        quality: 0.4,
       }),
       new OutlineFilter({
         thickness: 2,
         color: 0xffffff,
-        quality: 0.1,
+        quality: 0.4,
       }),
     ];
-    this.filters.forEach((filter) => {
-      filter.resolution = AbstractRenderer.defaultOptions.resolution;
-    });
   }
 
   public removeOutline(): void {
