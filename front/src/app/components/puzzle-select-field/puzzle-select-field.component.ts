@@ -1,7 +1,7 @@
 import type { AbortablePromise } from '../../models/abortable-promise';
 import type { ElementRef, OnInit } from '@angular/core';
 
-import { ChangeDetectionStrategy, Component, effect, output, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, model, signal, viewChild } from '@angular/core';
 
 import { ImageTooBigError, ImageTooSmallError, FileReadError, FileFetchError, ImageCreateError } from '../../models/error';
 import { ImageLoader } from '../../utils/image-loader';
@@ -54,15 +54,14 @@ export class PuzzleSelectFieldComponent implements OnInit {
     'tiger-by-pexels.jpg',
   ];
 
-  protected readonly puzzleImage = signal<ImageBitmap | null>(null);
+  public readonly puzzleImage = model.required<ImageBitmap | null>();
+  public readonly puzzleImageLoading = model.required<boolean>();
+
   protected readonly selectedPuzzle = signal<string | null>(null);
   protected readonly loadingPuzzle = signal<string | null>(null);
   protected readonly selectedCustomPuzzle = signal<string | null>(null);
   protected readonly loadingCustomPuzzle = signal<string | null>(null);
   protected readonly imageErrors = signal<ImageError[]>([]);
-
-  public readonly puzzleImageLoading = output<boolean>();
-  public readonly puzzleImageSelected = output<ImageBitmap>();
 
   protected readonly maxFileSize = 15; // In Megabytes
   protected readonly minPuzzleImageWidth = 450; // In pixels
@@ -75,15 +74,7 @@ export class PuzzleSelectFieldComponent implements OnInit {
 
   constructor() {
     effect(() => {
-      this.puzzleImageLoading.emit(!!this.loadingPuzzle() || !!this.loadingCustomPuzzle());
-    });
-
-    effect(() => {
-      const puzzleImage = this.puzzleImage();
-      if (!puzzleImage) {
-        return;
-      }
-      this.puzzleImageSelected.emit(puzzleImage);
+      this.puzzleImageLoading.set(!!this.loadingPuzzle() || !!this.loadingCustomPuzzle());
     });
   }
 

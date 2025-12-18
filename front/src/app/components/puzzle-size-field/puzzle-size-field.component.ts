@@ -1,6 +1,6 @@
 import type { PuzzleSizeParameters } from '../../models/puzzle-parameters';
 
-import { ChangeDetectionStrategy, Component, effect, input, model, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, input, model, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { AXIS_TO_DIMENSION, VALID_AXES } from '../../models/geometry';
@@ -21,12 +21,10 @@ export class PuzzleSizeFieldComponent {
 
   public readonly puzzleImage = input.required<ImageBitmap | null>();
   public readonly loading = input.required<boolean>();
+  public readonly puzzleSizeParameters = model.required<PuzzleSizeParameters | null>();
 
-  public readonly puzzleSizeParametersChange = output<PuzzleSizeParameters>();
-
-  protected readonly selectedPieceSizeIndex = model<number>(1);
+  protected readonly selectedPieceSizeIndex = signal<number>(0);
   protected readonly validPieceSizes = signal<number[]>([this.minPieceSizeConstraint, this.maxPieceSizeConstraint]);
-  protected readonly puzzleSizeParameters = signal<PuzzleSizeParameters | null>(null);
 
   constructor() {
     effect(() => {
@@ -46,14 +44,6 @@ export class PuzzleSizeFieldComponent {
         return;
       }
       this.updatePuzzleSizeParameters(puzzleImage, pieceSize);
-    });
-
-    effect(() => {
-      const puzzleSizeParameters = this.puzzleSizeParameters();
-      if (!puzzleSizeParameters) {
-        return;
-      }
-      this.puzzleSizeParametersChange.emit(puzzleSizeParameters);
     });
   }
 
