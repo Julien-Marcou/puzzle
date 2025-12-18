@@ -89,25 +89,16 @@ export class PuzzleSelectFieldComponent implements OnInit {
   }
 
   protected async setPuzzle(puzzleId: string): Promise<void> {
-    this.puzzleImageLoading.set(true);
-    this.puzzleIdLoading.set(puzzleId);
-
-    const updated = await this.updatePuzzleImage(ImageLoader.loadFromUrl(`${this.puzzleImageFolder}/${puzzleId}`));
-
-    this.puzzleImageLoading.set(false);
-    this.puzzleIdLoading.set(null);
-    if (updated) {
-      this.puzzleId.set(puzzleId);
-    }
+    await this.updatePuzzleImage(puzzleId, ImageLoader.loadFromUrl(`${this.puzzleImageFolder}/${puzzleId}`));
   }
 
   protected async setCustomPuzzle(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
+    input.value = '';
     if (!file) {
       return;
     }
-    input.value = '';
 
     if (file.size > (this.maxFileSize * 1024 * 1024)) {
       this.displayImageError('too-heavy');
@@ -115,25 +106,17 @@ export class PuzzleSelectFieldComponent implements OnInit {
     }
 
     const puzzleId = crypto.randomUUID();
-
-    this.puzzleImageLoading.set(true);
-    this.puzzleIdLoading.set(puzzleId);
-
-    const updated = await this.updatePuzzleImage(ImageLoader.loadFromFile(file));
-
-    this.puzzleImageLoading.set(false);
-    this.puzzleIdLoading.set(null);
-    if (updated) {
-      this.puzzleId.set(puzzleId);
-    }
+    await this.updatePuzzleImage(puzzleId, ImageLoader.loadFromFile(file));
   }
 
-  private async updatePuzzleImage(imageLoading: AbortablePromise<ImageBitmap>): Promise<boolean> {
+  private async updatePuzzleImage(puzzleId: string, imageLoading: AbortablePromise<ImageBitmap>): Promise<void> {
     if (this.imageLoading) {
       await this.imageLoading.abort();
     }
 
-    let success = false;
+    this.puzzleImageLoading.set(true);
+    this.puzzleIdLoading.set(puzzleId);
+
     this.imageLoading = imageLoading;
     try {
       const newPuzzleImage = await imageLoading;
@@ -148,11 +131,10 @@ export class PuzzleSelectFieldComponent implements OnInit {
         currentPuzzleImage.close();
       }
       this.puzzleImage.set(newPuzzleImage);
-      success = true;
+      this.puzzleId.set(puzzleId);
     }
     catch (error) {
-      if (!this.imageLoading.aborted) {
-        console.error(error);
+      if (error instanceof Error && error.name !== 'AbortError') {
         if (error instanceof ImageTooBigError) {
           this.displayImageError('too-big');
         }
@@ -173,9 +155,10 @@ export class PuzzleSelectFieldComponent implements OnInit {
         }
       }
     }
-    this.imageLoading = undefined;
-
-    return success;
+    finally {
+      this.puzzleImageLoading.set(false);
+      this.puzzleIdLoading.set(null);
+    }
   }
 
   protected clearImageError(id: number): void {

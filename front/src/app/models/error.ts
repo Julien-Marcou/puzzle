@@ -1,12 +1,3 @@
-export class AbortError extends Error {
-
-  constructor(message: string, options?: ErrorOptions) {
-    super(message, options);
-    this.name = 'AbortError';
-  }
-
-}
-
 export class ImageTooBigError extends Error {
 
   constructor(message: string, options?: ErrorOptions) {
