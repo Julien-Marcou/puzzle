@@ -4,7 +4,7 @@ import type { PuzzleGameParameters, PuzzleSpritesheetParameters } from './puzzle
 import type { PuzzleSpritesheet } from './puzzle-spritesheet';
 
 import { isDevMode } from '@angular/core';
-import { AbstractRenderer, Application, Container, Graphics, ImageSource, Text } from 'pixi.js';
+import { AbstractRenderer, Application, Container, Graphics, ImageSource } from 'pixi.js';
 import { Subject } from 'rxjs';
 
 import { PieceShape } from './piece-shape';
@@ -158,7 +158,6 @@ export class PuzzleGame {
       if (environment.showFpsGraph) {
         this.displayFpsGraph();
       }
-      const loadingText = this.displayLoadingMessage();
       await this.renderFrame();
 
       // Waiting for piece sprites to be ready
@@ -167,7 +166,6 @@ export class PuzzleGame {
 
       // Switch from loading text to puzzle view
       this.viewportContainer.visible = true;
-      this.application.stage.removeChild(loadingText);
       await this.renderFrame();
 
       // Start events & render loop
@@ -208,26 +206,6 @@ export class PuzzleGame {
     fpsGraph.x = 10;
     fpsGraph.y = 10;
     this.application.stage.addChild(fpsGraph);
-  }
-
-  private displayLoadingMessage(): Text {
-    const loadingText = new Text({
-      text: 'Chargement...',
-      style: {
-        fill: 0xffffff,
-        stroke: {
-          color: 0x000000,
-          width: 4,
-          join: 'bevel',
-        },
-        fontSize: 42,
-        fontFamily: 'sans-serif',
-      },
-    });
-    loadingText.x = Math.round((this.canvas.clientWidth - loadingText.width) / 2);
-    loadingText.y = Math.round((this.canvas.clientHeight - loadingText.height) / 2);
-    this.application.stage.addChild(loadingText);
-    return loadingText;
   }
 
   private async buildSpritesheet(): Promise<PuzzleSpritesheet> {

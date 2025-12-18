@@ -27,6 +27,7 @@ export class PuzzleGameComponent implements OnInit {
   public readonly puzzleGameParameters = input.required<PuzzleGameParameters>();
 
   private puzzleGame?: PuzzleGame;
+  protected readonly displayLoadingDialog = signal<boolean>(true);
   protected readonly displayEndDialog = signal<boolean>(false);
   protected readonly gamePlayTime = signal<string>('');
 
@@ -45,9 +46,13 @@ export class PuzzleGameComponent implements OnInit {
       this.gamePlayTime.set(`${playTimeHours}h ${playTimeMinutes}m ${playTimeSeconds}s`);
     });
 
-    this.puzzleGame.start().catch((error: unknown) => {
-      console.error(error);
-    });
+    this.puzzleGame.start()
+      .then(() => {
+        this.displayLoadingDialog.set(false);
+      })
+      .catch((error: unknown) => {
+        console.error(error);
+      });
   }
 
   protected async exitPuzzle(): Promise<void> {

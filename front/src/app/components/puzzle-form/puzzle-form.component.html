@@ -21,6 +21,6 @@
   </div>
 
   <div class="footer-actions">
-    <button type="button" class="start-puzzle-button" (click)="startPuzzle()" [disabled]="isLoading() || !puzzleImage()">Démarrer le puzzle</button>
+    <button type="button" class="start-puzzle-button" (click)="startPuzzle()" [disabled]="isLoading() || !puzzleImage() || !puzzleSizeParameters()">Démarrer le puzzle</button>
   </div>
 </div>

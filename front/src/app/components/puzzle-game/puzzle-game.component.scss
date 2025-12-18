@@ -35,6 +35,17 @@
   height: 100%;
 }
 
+.loading-dialog {
+  z-index: 1;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2rem;
+  color: #fff;
+  text-shadow: 0 0 10px #000;
+}
+
 .end-dialog {
   z-index: 1;
   position: absolute;
