@@ -11,11 +11,11 @@
 
 <div class="puzzle-size-output">
   <span class="min-value"> Petit </span>
-  @if (puzzleSizeParameters(); as puzzleSizeParameters) {
-    <span class="current-value">
+  <span class="current-value">
+    @if (puzzleSizeParameters(); as puzzleSizeParameters) {
       <span> {{ puzzleSizeParameters.horizontalPieceCount }}x{{ puzzleSizeParameters.verticalPieceCount }} </span>
       <span>({{ puzzleSizeParameters.horizontalPieceCount * puzzleSizeParameters.verticalPieceCount }} pièces)</span>
-    </span>
-  }
+    }
+  </span>
   <span class="max-value"> Grand </span>
 </div>

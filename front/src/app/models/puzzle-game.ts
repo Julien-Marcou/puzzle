@@ -49,6 +49,7 @@ export class PuzzleGame {
   private hoveredPieceGroup?: PieceGroup;
   private initialPieceGroupDrag?: PieceGroupDragInitialState;
 
+  private isFinished = false;
   private playTime = 0;
   private startDate?: Date;
 
@@ -417,7 +418,7 @@ export class PuzzleGame {
   }
 
   private preventLosingProgress(event: Event): string | false {
-    if (isDevMode()) {
+    if (isDevMode() || this.isFinished) {
       return false;
     }
     event.preventDefault();
@@ -915,6 +916,7 @@ export class PuzzleGame {
       return false;
     }
     this.stopPlayTime();
+    this.isFinished = true;
     this.onFinish.next({ playTime: this.playTime });
     this.border.visible = false;
     return true;
