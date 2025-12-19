@@ -7,7 +7,7 @@ import { ImageTooBigError, ImageTooSmallError, FileReadError, FileFetchError, Im
 import { ImageLoader } from '../../utils/image-loader';
 import { CheckmarkSpinnerComponent } from '../checkmark-spinner/checkmark-spinner.component';
 
-type ImageErrorType = 'unknown' | 'too-heavy' | 'too-small' | 'too-big' | 'file-read' | 'file-fetch' | 'image-create';
+type ImageErrorType = 'unknown' | 'invalid-mime-type' | 'too-heavy' | 'too-small' | 'too-big' | 'file-read' | 'file-fetch' | 'image-create';
 
 type ImageError = {
   id: number;
@@ -22,6 +22,8 @@ type ImageError = {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PuzzleSelectFieldComponent implements OnInit {
+
+  private readonly supportedMimeTypes = ['image/png', 'image/gif', 'image/jpeg', 'image/webp', 'image/bmp'];
 
   private readonly puzzleFileInput = viewChild.required<ElementRef<HTMLInputElement>>('puzzleFileInput');
 
@@ -61,6 +63,7 @@ export class PuzzleSelectFieldComponent implements OnInit {
   protected readonly puzzleIdLoading = signal<string | null>(null);
   protected readonly imageErrors = signal<ImageError[]>([]);
 
+  protected readonly accept = this.supportedMimeTypes.join(', ');
   protected readonly maxFileSize = 15; // In Megabytes
   protected readonly minPuzzleImageWidth = 450; // In pixels
   protected readonly minPuzzleImageHeight = 450; // In pixels
@@ -102,6 +105,11 @@ export class PuzzleSelectFieldComponent implements OnInit {
 
     if (file.size > (this.maxFileSize * 1024 * 1024)) {
       this.displayImageError('too-heavy');
+      return;
+    }
+
+    if (!this.supportedMimeTypes.includes(file.type)) {
+      this.displayImageError('invalid-mime-type');
       return;
     }
 
