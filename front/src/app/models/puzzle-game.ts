@@ -210,6 +210,7 @@ export class PuzzleGame {
     worker.postMessage(
       {
         ...this.parameters,
+        puzzleImage: clonedImage,
         pieceMargin: this.pieceMargin,
         pieceSpriteSize: this.pieceSpriteSize,
       } satisfies PuzzleSpritesheetParameters,
