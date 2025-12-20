@@ -8,6 +8,12 @@ import { PieceShape } from '../models/piece-shape';
 import { StraightEdge } from '../models/straight-edge';
 import { TabbedEdge } from '../models/tabbed-edge';
 
+addEventListener('message', ({ data }: MessageEvent<PuzzleSpritesheetParameters>): void => {
+  const spritesheetBuilder = new PuzzleSpritesheetBuilder(data);
+  const spritesheet = spritesheetBuilder.build();
+  postMessage(spritesheet, { transfer: [spritesheet.image, spritesheet.alphaData.buffer] });
+});
+
 export class PuzzleSpritesheetBuilder {
 
   private readonly edgeMatrices: Record<Axis, Edge[][]>;
