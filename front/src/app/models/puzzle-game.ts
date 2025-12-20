@@ -204,7 +204,7 @@ export class PuzzleGame {
     const clonedImage = await createImageBitmap(this.parameters.puzzleImage);
 
     // Create worker
-    const worker = new Worker(new URL('../utils/puzzle-spritesheet-builder', import.meta.url));
+    const worker = new Worker(new URL('../utils/puzzle-spritesheet-worker', import.meta.url));
 
     // Push task
     worker.postMessage(
