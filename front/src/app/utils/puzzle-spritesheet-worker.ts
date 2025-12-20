@@ -14,7 +14,7 @@ addEventListener('message', ({ data }: MessageEvent<PuzzleSpritesheetParameters>
   postMessage(spritesheet, { transfer: [spritesheet.image, spritesheet.alphaData.buffer] });
 });
 
-export class PuzzleSpritesheetWorker {
+class PuzzleSpritesheetWorker {
 
   private readonly edgeMatrices: Record<Axis, Edge[][]>;
   private readonly pieceShapeMatrix: PieceShape[][];

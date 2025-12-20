@@ -1,10 +1,10 @@
 import type { Point } from './geometry';
 import type { PointerId, Pointer, PinchToZoomInitialState, ViewportDragInitialState, PieceGroupDragInitialState, GroupSnapping, PuzzleEventListeners } from './puzzle-manipulation';
-import type { PuzzleGameParameters, PuzzleSpritesheetParameters } from './puzzle-parameters';
-import type { PuzzleSpritesheet } from './puzzle-spritesheet';
+import type { PuzzleGameParameters } from './puzzle-parameters';
+import type { PuzzleSpritesheetTexture } from './puzzle-spritesheet';
 
 import { isDevMode } from '@angular/core';
-import { AbstractRenderer, Application, Container, Graphics, ImageSource } from 'pixi.js';
+import { AbstractRenderer, Application, Container, Graphics } from 'pixi.js';
 import { Subject } from 'rxjs';
 
 import { PieceShape } from './piece-shape';
@@ -13,6 +13,7 @@ import { environment } from '../../environments/environment';
 import { FpsGraph } from '../display-objects/fps-graph';
 import { PieceGroup } from '../display-objects/piece-group';
 import { PieceSprite } from '../display-objects/piece-sprite';
+import { PuzzleSpritesheetBuilder } from '../utils/puzzle-spritesheet-builder';
 
 export class PuzzleGame {
 
@@ -158,11 +159,9 @@ export class PuzzleGame {
       // Render first frame to avoid black screen during loading
       this.application.render();
 
-      // Build spritesheet
-      const { puzzleTexture, alphaData } = await this.buildSpritesheet();
-
       // Add puzzle pieces
-      this.addPieces(puzzleTexture, alphaData);
+      const spritesheetTexture = await this.buildSpritesheetTexture();
+      this.addPieces(spritesheetTexture);
 
       // Start events & render loop
       this.resizeObserver.observe(this.wrapper);
@@ -199,69 +198,23 @@ export class PuzzleGame {
     this.application.stage.addChild(fpsGraph);
   }
 
-  private async buildSpritesheet(): Promise<{ puzzleTexture: ImageSource; alphaData: Uint8ClampedArray }> {
-    // Cloning original image, so that we can transfer it to the worker, and still be able to use it on the frontend
-    const clonedImage = await createImageBitmap(this.parameters.puzzleImage);
-
-    // Create worker
-    const worker = new Worker(new URL('../utils/puzzle-spritesheet-worker', import.meta.url));
-
-    // Push task
-    worker.postMessage(
+  private async buildSpritesheetTexture(): Promise<PuzzleSpritesheetTexture> {
+    const spritesheetBuilder = new PuzzleSpritesheetBuilder(
+      this.application,
       {
         ...this.parameters,
-        puzzleImage: clonedImage,
         pieceMargin: this.pieceMargin,
         pieceSpriteSize: this.pieceSpriteSize,
-      } satisfies PuzzleSpritesheetParameters,
-      {
-        transfer: [clonedImage],
       },
     );
-
-    // Wait for result
-    const { image, alphaData } = await new Promise<PuzzleSpritesheet>((resolve, reject) => {
-      worker.onmessage = ({ data }: MessageEvent<PuzzleSpritesheet | null>): void => {
-        if (data) {
-          resolve(data);
-        }
-        else {
-          reject(new Error('Spritesheet build error'));
-        }
-      };
-    });
-
-    // Convert spritesheet to pixijs texture
-    const puzzleTexture = new ImageSource({
-      resource: image,
-      autoGenerateMipmaps: true,
-      resolution: 1,
-      minFilter: 'linear',
-      magFilter: 'linear',
-      mipmapFilter: 'linear',
-      sampleCount: 8,
-      antialias: true,
-    });
-    await this.application.renderer.prepare.upload(puzzleTexture);
-
-    // Cleanup resources
-    worker.terminate();
-    clonedImage.close();
-    image.close();
-
-    return { puzzleTexture, alphaData };
+    return await spritesheetBuilder.buildTexture();
   }
 
-  private addPieces(puzzleTexture: ImageSource, alphaData: Uint8ClampedArray): void {
+  private addPieces(spritesheetTexture: PuzzleSpritesheetTexture): void {
     for (let x = 0; x < this.parameters.horizontalPieceCount; x++) {
       const pieceColumn = [];
       for (let y = 0; y < this.parameters.verticalPieceCount; y++) {
-        const pieceSprite = new PieceSprite(
-          { x, y },
-          this.pieceSpriteSize,
-          puzzleTexture,
-          alphaData,
-        );
+        const pieceSprite = new PieceSprite({ x, y }, this.pieceSpriteSize, spritesheetTexture);
         const pieceGroup = new PieceGroup();
         pieceGroup.addChild(pieceSprite);
         pieceColumn.push(pieceSprite);

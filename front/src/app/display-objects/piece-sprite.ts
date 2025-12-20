@@ -1,6 +1,6 @@
 import type { PieceGroup } from './piece-group';
 import type { Point } from '../models/geometry';
-import type { TextureSource } from 'pixi.js';
+import type { PuzzleSpritesheetTexture } from '../models/puzzle-spritesheet';
 
 import { Texture, Sprite, Rectangle } from 'pixi.js';
 
@@ -14,12 +14,11 @@ export class PieceSprite extends Sprite {
   constructor(
     public readonly cell: Readonly<Point>,
     size: number,
-    private readonly puzzleTexture: TextureSource,
-    private readonly puzzleAlphaData: Uint8ClampedArray,
+    private readonly puzzleSpritesheetTexture: PuzzleSpritesheetTexture,
   ) {
     const textureOrigin = { x: cell.x * size, y: cell.y * size };
     super(new Texture({
-      source: puzzleTexture,
+      source: puzzleSpritesheetTexture.source,
       frame: new Rectangle(textureOrigin.x, textureOrigin.y, size, size),
     }));
     this.textureOrigin = textureOrigin;
@@ -44,8 +43,8 @@ export class PieceSprite extends Sprite {
     const spritesheetY = this.textureOrigin.y + spriteY;
 
     // Convert position to index, because puzzleAlphaData is a 1D array representation of the alpha channel values of the spritesheet's pixels
-    const pixelIndex = this.puzzleTexture.width * spritesheetY + spritesheetX;
-    return this.puzzleAlphaData[pixelIndex] < this.transparentThreshold;
+    const pixelIndex = this.puzzleSpritesheetTexture.source.width * spritesheetY + spritesheetX;
+    return this.puzzleSpritesheetTexture.alphaData[pixelIndex] < this.transparentThreshold;
   }
 
 }
