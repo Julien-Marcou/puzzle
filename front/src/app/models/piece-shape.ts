@@ -21,8 +21,6 @@ export class PieceShape {
   public readonly path: Path2D;
 
   constructor(
-    public readonly x: number,
-    public readonly y: number,
     size: number,
     northEdge: Edge,
     eastEdge: Edge,

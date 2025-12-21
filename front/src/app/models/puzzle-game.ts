@@ -160,8 +160,9 @@ export class PuzzleGame {
       this.application.render();
 
       // Add puzzle pieces
-      const spritesheetTexture = await this.buildSpritesheetTexture();
-      this.addPieces(spritesheetTexture);
+      const spritesheetTextures = await this.buildSpritesheetTextures();
+      this.addPieces(spritesheetTextures);
+      this.shufflePieces();
 
       // Start events & render loop
       this.resizeObserver.observe(this.wrapper);
@@ -198,7 +199,7 @@ export class PuzzleGame {
     this.application.stage.addChild(fpsGraph);
   }
 
-  private async buildSpritesheetTexture(): Promise<PuzzleSpritesheetTexture> {
+  private async buildSpritesheetTextures(): Promise<PuzzleSpritesheetTexture[]> {
     const spritesheetBuilder = new PuzzleSpritesheetBuilder(
       this.application,
       {
@@ -210,19 +211,20 @@ export class PuzzleGame {
     return await spritesheetBuilder.buildTexture();
   }
 
-  private addPieces(spritesheetTexture: PuzzleSpritesheetTexture): void {
-    for (let x = 0; x < this.parameters.horizontalPieceCount; x++) {
-      const pieceColumn = [];
-      for (let y = 0; y < this.parameters.verticalPieceCount; y++) {
-        const pieceSprite = new PieceSprite({ x, y }, this.pieceSpriteSize, spritesheetTexture);
-        const pieceGroup = new PieceGroup();
-        pieceGroup.addChild(pieceSprite);
-        pieceColumn.push(pieceSprite);
-        this.pieceContainer.addChild(pieceGroup);
+  private addPieces(spritesheetTextures: PuzzleSpritesheetTexture[]): void {
+    for (const spritesheetTexture of spritesheetTextures) {
+      for (let spriteX = 0; spriteX < spritesheetTexture.horizontalPieceCount; spriteX++) {
+        const pieceColumn = [];
+        for (let spriteY = 0; spriteY < spritesheetTexture.verticalPieceCount; spriteY++) {
+          const pieceSprite = new PieceSprite(spriteX, spriteY, spritesheetTexture);
+          const pieceGroup = new PieceGroup();
+          pieceGroup.addChild(pieceSprite);
+          pieceColumn.push(pieceSprite);
+          this.pieceContainer.addChild(pieceGroup);
+        }
+        this.pieces.push(pieceColumn);
       }
-      this.pieces.push(pieceColumn);
     }
-    this.shufflePieces();
   }
 
   private shufflePieces(): void {

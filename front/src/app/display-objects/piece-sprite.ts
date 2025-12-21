@@ -2,26 +2,36 @@ import type { PieceGroup } from './piece-group';
 import type { Point } from '../models/geometry';
 import type { PuzzleSpritesheetTexture } from '../models/puzzle-spritesheet';
 
-import { Texture, Sprite, Rectangle } from 'pixi.js';
+import { Rectangle, Texture, Sprite } from 'pixi.js';
 
 export class PieceSprite extends Sprite {
 
   declare public readonly parent: PieceGroup;
 
+  public readonly cell: Readonly<Point>;
+
   private readonly transparentThreshold = 80;
-  private readonly textureOrigin: Point;
 
   constructor(
-    public readonly cell: Readonly<Point>,
-    size: number,
-    private readonly puzzleSpritesheetTexture: PuzzleSpritesheetTexture,
+    spriteX: number,
+    spriteY: number,
+    private readonly spritesheetTexture: PuzzleSpritesheetTexture,
   ) {
-    const textureOrigin = { x: cell.x * size, y: cell.y * size };
-    super(new Texture({
-      source: puzzleSpritesheetTexture.source,
-      frame: new Rectangle(textureOrigin.x, textureOrigin.y, size, size),
-    }));
-    this.textureOrigin = textureOrigin;
+    super(new Texture(
+      {
+        source: spritesheetTexture.source,
+        frame: new Rectangle(
+          spriteX * spritesheetTexture.spriteSize,
+          spriteY * spritesheetTexture.spriteSize,
+          spritesheetTexture.spriteSize,
+          spritesheetTexture.spriteSize,
+        ),
+      },
+    ));
+    this.cell = {
+      x: spriteX + spritesheetTexture.pieceOffsetX,
+      y: spriteY + spritesheetTexture.pieceOffsetY,
+    };
   }
 
   public isPointInBoundingBox(point: Point): boolean {
@@ -38,13 +48,13 @@ export class PieceSprite extends Sprite {
     const spriteX = Math.floor(point.x - this.x);
     const spriteY = Math.floor(point.y - this.y);
 
-    // Position of the point relative to the spritesheet
-    const spritesheetX = this.textureOrigin.x + spriteX;
-    const spritesheetY = this.textureOrigin.y + spriteY;
+    // Position of the point relative to the spritesheet texture
+    const spritesheetX = this.texture.frame.x + spriteX;
+    const spritesheetY = this.texture.frame.y + spriteY;
 
-    // Convert position to index, because puzzleAlphaData is a 1D array representation of the alpha channel values of the spritesheet's pixels
-    const pixelIndex = this.puzzleSpritesheetTexture.source.width * spritesheetY + spritesheetX;
-    return this.puzzleSpritesheetTexture.alphaData[pixelIndex] < this.transparentThreshold;
+    // Convert position to index, because alphaData is a 1D array representation of the spritesheet's alpha channel
+    const pixelIndex = this.spritesheetTexture.source.width * spritesheetY + spritesheetX;
+    return this.spritesheetTexture.alphaData[pixelIndex] < this.transparentThreshold;
   }
 
 }
